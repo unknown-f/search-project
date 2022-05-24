@@ -1,0 +1,77 @@
+<html>
+    <script>
+        function updateMethod(theMethod){
+            if(theMethod == "default"){
+                document.getElementById("input").innerHTML = "!!!!!!";
+            }
+            else{
+                document.getElementById("input").innerHTML = "??????????";
+            }
+        }
+
+        function searching(){
+            time = "time"
+            text = document.getElementById("input").value;
+            var xhr = new XMLHttpRequest();
+
+            // 每次需要发请求需要做两步：
+            xhr.open("get", "http:127.0.0.1:8080/"+time+"/"+text, true);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        var ret = xhr.responseText;
+                        var obj = JSON.parse(ret)
+
+                        console.log(obj);
+
+                        var i;
+                        var idx = obj.ReturnRes;
+                        for (i=0;i<idx.length;i++){
+                            console.log(idx[i])
+                            document.getElementById("content").innerHTML += ("<a href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
+                        }
+                    }
+                    else{
+                        alert("Problem retrieving XML data:" + this.status);
+                    }
+                }
+            }
+        }
+    </script>
+
+	<head>
+		<meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8">
+		<title>搜索引擎</title>
+	</head>
+
+	<body>
+		<img src="./logo.png" width="200" height="30" />
+        <br>
+
+		<input id="input" type="text" name="target" size="40">
+		<input type="submit" value="搜索" size="40" onclick="searching()">
+
+
+		<form id="sclectMethod" action="sclectMethod()">
+			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="default" checked>文本搜索
+			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
+		</form>
+        <hr>
+
+		<div id="content" style="height:400px">
+            
+		</div>
+
+		<div id="page" style="clear:both;text-align:center;">
+		翻页
+		</div>
+
+		<div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+		版权 © 队名
+        </div>
+	</body>
+</html>
