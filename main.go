@@ -31,8 +31,8 @@ type Keyword struct {
 
 //查询的结果:文档及得分
 type SearchRlt struct {
-	Grade int `json:"Grade" bson:"Grade"`
-	DocID int `json:"DocID" bson:"DocID"`
+	Grade float32 `json:"Grade" bson:"Grade"`
+	DocID int     `json:"DocID" bson:"DocID"`
 }
 
 type SearchRespond struct {
@@ -118,9 +118,9 @@ func SearchRltToDoc(rlt []SearchRlt) []Doc {
 
 //text待查询的文本，maxnumofrlt返回的文档ID的数量的上限
 func Search(text string, maxnumofrlt int, jbfc *gojieba.Jieba) []SearchRlt {
-	var keysearchrlt []int
 	var keysearchrltp Keyword
 	var srlt SearchRltC
+	keyword_ifidf := make(map[int]float32)
 	words := CutWords(text, jbfc)
 	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
@@ -128,24 +128,15 @@ func Search(text string, maxnumofrlt int, jbfc *gojieba.Jieba) []SearchRlt {
 		if errread != nil {
 			fmt.Println(errread)
 		} else {
-			keysearchrlt = append(keysearchrlt, keysearchrltp.DocList...)
-		}
-	}
-	//对Doclist的集合排序，目的是让相同的ID排在相邻位置
-	sort.Ints(keysearchrlt)
-	//fmt.Println(keysearchrlt)
-	if len(keysearchrlt) != 0 {
-		var pindex int = 0
-		var p int = keysearchrlt[0]
-		//统计每个DocID出现的次数，即该DocID与检索文本的关联度得分
-		for index, docid := range keysearchrlt {
-			if docid != p {
-				srlt = append(srlt, SearchRlt{Grade: index - pindex, DocID: docid})
-				p = docid
-				pindex = index
+			for _, keyword := range keysearchrltp.DocList {
+				keyword_ifidf[keyword] += 1 / float32(len(keysearchrltp.DocList))
 			}
 		}
-		//按得分从高到低排序
+	}
+	if len(keyword_ifidf) != 0 {
+		for key, grade := range keyword_ifidf {
+			srlt = append(srlt, SearchRlt{Grade: grade, DocID: key})
+		}
 		sort.Sort(srlt)
 		if len(srlt) > maxnumofrlt {
 			srlt = srlt[0:maxnumofrlt]
