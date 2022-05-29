@@ -4,9 +4,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
+	"net/http"
 	"os"
 	"sort"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/yanyiwu/gojieba"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -29,6 +33,12 @@ type Keyword struct {
 type SearchRlt struct {
 	Grade int `json:"Grade" bson:"Grade"`
 	DocID int `json:"DocID" bson:"DocID"`
+}
+
+type SearchRespond struct {
+	SearchTime string `json:"SearchTime" bson:"SearchTime"`
+	SearchText string `json:"SearchText" bson:"SearchText"`
+	ReturnRes  []Doc  `json:"ReturnRes" bson:"ReturnRes"`
 }
 
 //***结构体排序方法Start***
@@ -69,9 +79,26 @@ func main() {
 	db := session.DB("search_project")
 	c_indextodoc = db.C("indextosource")
 	c_keytoindx = db.C("keytoindex")
-	//ReadCutAndWrite(x)
-	srlttest := SearchRltToDoc(Search("最帅呀", 5, x))
-	fmt.Println(srlttest)
+	// ReadCutAndWrite(x)
+
+	r := gin.Default() //打开服务器
+	r.Use(Cors())
+	r.GET("/:time/:text", func(c *gin.Context) {
+		time := c.Param("time")
+		text := c.Param("text")
+		srlttest := SearchRltToDoc(Search(text, 5, x))
+		data := SearchRespond{
+			SearchTime: time,
+			SearchText: text,
+			ReturnRes:  srlttest,
+		}
+		fmt.Println("return:", data)
+		c.JSON(200, data)
+	})
+	err = r.Run()
+	if err != nil {
+		return
+	}
 }
 
 //根据检索到的文档ID，查询得到文档
@@ -137,10 +164,44 @@ func CutWords(doctext string, jbfc *gojieba.Jieba) []string {
 	return words
 }
 
+func Cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		origin := c.Request.Header.Get("Origin") //请求头部
+		if origin != "" {
+			//接收客户端发送的origin （重要！）
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			//服务器支持的所有跨域请求的方法
+			c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE,UPDATE")
+			//允许跨域设置可以返回其他子段，可以自定义字段
+			c.Header("Access-Control-Allow-Headers", "Authorization, Content-Length, X-CSRF-Token, Token,session,X_Requested_With,Accept, Origin, Host, Connection, Accept-Encoding, Accept-Language,DNT, X-CustomHeader, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Content-Type, Pragma")
+			// 允许浏览器（客户端）可以解析的头部 （重要）
+			c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers")
+			//设置缓存时间
+			c.Header("Access-Control-Max-Age", "172800")
+			//允许客户端传递校验信息比如 cookie (重要)
+			c.Header("Access-Control-Allow-Credentials", "true")
+		}
+
+		//允许类型校验
+		if method == "OPTIONS" {
+			c.JSON(http.StatusOK, "ok!")
+		}
+
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Panic info is: %v", err)
+			}
+		}()
+		c.Next()
+	}
+}
+
 //读取数据集，倒排索引，写入数据库
 func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
+	startTime := time.Now()
 	fileName := "./data/wukong50k_release.csv"
-	//fileName := "./data/test.csv"
+	// fileName := "./data/test.csv"
 	fs, err := os.Open(fileName)
 	if err != nil {
 		return err
@@ -154,6 +215,9 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 	for {
 		row, errread := r.Read()
 		fmt.Println("row", row)
+		if errread == errread {
+			fmt.Println(time.Now().Sub(startTime))
+		}
 		if len(row) == 0 {
 			return nil
 		}
