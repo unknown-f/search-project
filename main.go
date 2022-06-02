@@ -83,6 +83,15 @@ func main() {
 
 	r := gin.Default() //打开服务器
 	r.Use(Cors())
+
+	// 加载 html 文件
+	r.LoadHTMLFiles("./view.html")
+	r.StaticFile("/logo.png", "./logo.png")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "view.html", nil)
+	})
+
 	r.GET("/:time/:text", func(c *gin.Context) {
 		time := c.Param("time")
 		text := c.Param("text")

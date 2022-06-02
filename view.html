@@ -1,11 +1,113 @@
 <html>
     <script>
-        function updateMethod(theMethod){
-            if(theMethod == "default"){
-                document.getElementById("input").innerHTML = "!!!!!!";
+        var user = "";
+        var currPage;
+        var pageSize = 3;
+        var searchRes;
+        var collection;
+
+        function changePage(page){
+            document.getElementById(currPage).setAttribute('class','');
+            document.getElementById(page).setAttribute('class','active');
+            currPage = page;
+            flushSearch();
+        }
+
+        function flushSearch(){
+            document.getElementById("content").innerHTML = "";
+            for(i=0;i<pageSize;i++){
+                if(currPage*pageSize+i>=searchRes.length){
+                    break;
+                }
+                document.getElementById("content").innerHTML += searchRes[currPage*pageSize+i];
+            }
+        }
+
+        function flushUser(){
+            if(user == ""){
+                
+            }
+        }
+
+        function showRightUpBox(registerORlogin){
+            if(registerORlogin == "register"){
+                document.getElementById("loginBtn").value="注册";
             }
             else{
-                document.getElementById("input").innerHTML = "??????????";
+                document.getElementById("loginBtn").value="登录";
+            }
+            document.getElementById("rightupBox").style.display="block";
+        }
+
+        function login(){
+            time = "time"
+            var method = document.getElementById("loginBtn").value;
+            var usrName = document.getElementById("inputUserName").value;
+            var pwd = document.getElementById("inputPWD").value;
+
+            if(usrName == ""){
+                alert("用户名不能为空");
+                return;
+            }
+            if(usrName.includes("/")){
+                alert("用户名不能含有'/'");
+                return;
+            }
+            if(pwd == ""){
+                alert("密码不能为空");
+                return;
+            }
+            if(pwd.includes("/")){
+                alert("密码不能含有'/'");
+                return;
+            }
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("get", "http:127.0.0.1:8080/"+time+"/"+method+"/"+usrName+"/"+pwd, true);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        // var ret = xhr.responseText;
+                        // var obj = JSON.parse(ret)
+
+                        // var i;
+                        // var idx = obj.ReturnRes;
+                        // searchRes = new Array(idx.length)
+                        // for (var i=0;i<idx.length;i++){
+                        //     searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
+                        // }
+                        // document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
+                        // for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
+                        //     document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
+                        // }
+                        // currPage = 0;
+                        flushUser();
+                    }
+                    else{
+                        alert("Problem retrieving XML data:" + this.status);
+                    }
+                }
+            }
+        }
+
+        function cancelLogin(){
+            document.getElementById("inputUserName").value="";
+            document.getElementById("inputPWD").value="";
+            document.getElementById("rightupBox").style.display="none";
+        }
+
+        function updateMethod(theMethod){
+            if(theMethod == "default"){
+                document.getElementById("input").innerText = "!!!!!!";
+                console.log("!!!");
+            }
+            else{
+                document.getElementById("input").innerHTML = "";
+                console.log("???");
             }
         }
 
@@ -26,29 +128,100 @@
                         var ret = xhr.responseText;
                         var obj = JSON.parse(ret)
 
-                        console.log(obj);
-
                         var i;
                         var idx = obj.ReturnRes;
-                        for (i=0;i<idx.length;i++){
-                            console.log(idx[i])
-                            document.getElementById("content").innerHTML += ("<a href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
+                        searchRes = new Array(idx.length)
+                        for (var i=0;i<idx.length;i++){
+                            searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
                         }
+                        document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
+                        for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
+                            document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
+                        }
+                        currPage = 0;
+                        flushSearch();
                     }
                     else{
                         alert("Problem retrieving XML data:" + this.status);
                     }
                 }
+
             }
+
         }
     </script>
 
 	<head>
 		<meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8">
 		<title>搜索引擎</title>
+        <style>
+            #rightup{
+                width: 100px;
+                height: 50px;
+                position: absolute;
+                top:0px;
+                right:0px;
+            }
+
+            #rightupBox{
+                display:none;
+            }
+            #loginBtn{
+                width: 45%;
+                float: left;
+            }
+            #cancelBtn{
+                width: 45%;
+                float: left;
+            }
+            /* #right{
+                width: 300px;
+                height: 600px;
+                position: absolute;
+                top:200px;
+                right:0px;
+            } */
+
+            ul.pagination {
+                display: inline-block;
+                padding: 0;
+                margin: 0;
+            }
+            
+            ul.pagination li {display: inline;}
+            
+            ul.pagination li a {
+                color: black;
+                float: left;
+                padding: 8px 16px;
+                text-decoration: none;
+                transition: background-color .3s;
+                border: 1px solid #ddd;
+                margin: 0 4px;
+            }
+            ul.pagination li a.active {
+                background-color: #2c73c5;
+                color: white;
+                border: 1px solid #2c73c5;
+            }
+            ul.pagination li a:hover:not(.active) {background-color: #ddd;}
+
+
+        </style>
 	</head>
 
 	<body>
+        <div id="rightup">
+            <a id="register" onclick="showRightUpBox(this.id)">注册&nbsp&nbsp</a>
+            <a id="login" onclick="showRightUpBox(this.id)">&nbsp&nbsp登录</a>
+            <div id="rightupBox">
+                <div class="login-item"><input type="test" id="inputUserName" placeholder="输入用户名" size="8"/></div>
+                <div class="login-item"><input type="password" id="inputPWD" placeholder="输入密码"  size="8"/></div>
+
+                <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login()"/></div>
+                <div class="login-item"><input type="submit" id="cancelBtn" value="取消" size="2" onclick="cancelLogin()"/></div>
+            </div>
+        </div>
 		<img src="./logo.png" width="200" height="30" />
         <br>
 
@@ -56,21 +229,19 @@
 		<input type="submit" value="搜索" size="40" onclick="searching()">
 
 
-		<form id="sclectMethod" action="sclectMethod()">
+		<form id="selectMethod">
 			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="default" checked>文本搜索
 			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
 		</form>
         <hr>
 
-		<div id="content" style="height:400px">
-            
-		</div>
+		<div id="content" style="height:800px"></div>
 
-		<div id="page" style="clear:both;text-align:center;">
-		翻页
-		</div>
+        <ul id="pagelist" class="pagination"></ul>
 
-		<div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+        <p></p>
+		
+        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
 		版权 © 队名
         </div>
 	</body>
