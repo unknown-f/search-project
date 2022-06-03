@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,9 +11,11 @@ import (
 	"searchproject/repository"
 	"searchproject/routers"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/yanyiwu/gojieba"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -64,6 +67,7 @@ var URL string = "localhost:27017" //mongodb的地址
 
 var c_indextodoc *mgo.Collection //docid与doc的对应关系集合
 var c_keytoindx *mgo.Collection  //关键词与docid的对应关系集合
+var redisdb *redis.Client
 
 //这两个表用哈希索引应该比较快，这个需要后面对比一下
 
@@ -82,7 +86,11 @@ func main() {
 	c_indextodoc = db.C("indextosource")
 	c_keytoindx = db.C("keytoindex")
 	// ReadCutAndWrite(x)
-
+	err = initRedis()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(redisdb.ZIncrBy("hotdoc", 1, "doc1").Result())
 	r := gin.Default() //打开服务器
 	r.Use(Cors())
 
@@ -117,17 +125,64 @@ func main() {
 	}
 }
 
+func initRedis() error {
+	redisdb = redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379", // 指定
+		Password: "",
+		DB:       0, // redis一共16个库，指定其中一个库即可
+	})
+	_, err := redisdb.Ping().Result()
+	return err
+}
+
+func SearchTopNDoc(NDoc int64) []Doc {
+	var docrlt []Doc
+	hotdoc, _ := redisdb.ZRevRangeWithScores("hotdoc", 0, NDoc).Result()
+	for _, docid := range hotdoc {
+		docrlt = append(docrlt, SearchOneRltToDoc(docid.Member.(int)))
+	}
+	return docrlt
+}
+
+func SearchTopNKeyword(NDoc int64) []string {
+	var hotkeywords []string
+	hotkeyword, _ := redisdb.ZRevRangeWithScores("hotkeyword", 0, NDoc).Result()
+	for _, docid := range hotkeyword {
+		hotkeywords = append(hotkeywords, docid.Member.(string))
+	}
+	return hotkeywords
+}
+
 //根据检索到的文档ID，查询得到文档
+
+func SearchOneRltToDoc(docid int) Doc {
+	var docrltp Doc
+	redisrlt, errs := redisdb.Get("doc:" + strconv.Itoa(docid)).Result()
+	if errs != nil {
+		var redisbyte []byte
+		c_indextodoc.Find(bson.M{"ID": docid}).One(&docrltp)
+		redisbyte, errs = json.Marshal(docrltp)
+		if errs != nil {
+			fmt.Println(errs)
+		} else {
+			redisdb.Set("doc:"+strconv.Itoa(docid), string(redisbyte), time.Hour*24)
+		}
+
+	} else {
+		fmt.Println("read from redis", docid)
+		redisdb.ZIncrBy("hotdoc", 1, "doc:"+strconv.Itoa(docid)).Result()
+		errs = json.Unmarshal([]byte(redisrlt), &docrltp)
+		if errs != nil {
+			fmt.Println(errs)
+		}
+	}
+	return docrltp
+}
+
 func SearchRltToDoc(rlt []SearchRlt) []Doc {
 	var docrlt []Doc
-	var docrltp Doc
-	if len(rlt) != 0 {
-		for _, rltp := range rlt {
-			c_indextodoc.Find(bson.M{"ID": rltp.DocID}).One(&docrltp)
-			docrlt = append(docrlt, docrltp)
-		}
-	} else {
-		docrlt = []Doc{}
+	for _, rltp := range rlt {
+		docrlt = append(docrlt, SearchOneRltToDoc(rltp.DocID))
 	}
 	return docrlt
 }
@@ -140,13 +195,27 @@ func Search(text string, maxnumofrlt int, jbfc *gojieba.Jieba) []SearchRlt {
 	words := CutWords(text, jbfc)
 	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
-		errread := c_keytoindx.Find(bson.M{"Name": value}).One(&keysearchrltp)
+		redisrlt, errread := redisdb.Get("keyword:" + value).Result()
 		if errread != nil {
-			fmt.Println(errread)
-		} else {
-			for _, keyword := range keysearchrltp.DocList {
-				keyword_ifidf[keyword] += 1 / float32(len(keysearchrltp.DocList))
+			var redisbyte []byte
+			fmt.Println("read1", errread)
+			errread = c_keytoindx.Find(bson.M{"Name": value}).One(&keysearchrltp)
+			redisbyte, errread = json.Marshal(keysearchrltp)
+			if errread != nil {
+				fmt.Println(errread)
+			} else {
+				redisdb.Set("keyword:"+value, string(redisbyte), time.Hour*24).Result()
 			}
+		} else {
+			redisdb.ZIncrBy("hotkeyword", 1, "keyword:"+value).Result()
+			errread = json.Unmarshal([]byte(redisrlt), &keysearchrltp)
+			if errread != nil {
+				fmt.Println(errread)
+			}
+			//redisdb.ZAdd("hotkeyword", redis.Z{Score: 1, Member: "keyword:" + value})
+		}
+		for _, docid := range keysearchrltp.DocList {
+			keyword_ifidf[docid] += 1 / float32(len(keysearchrltp.DocList))
 		}
 	}
 	if len(keyword_ifidf) != 0 {
