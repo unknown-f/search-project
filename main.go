@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"searchproject/repository"
+	"searchproject/routers"
 	"sort"
 	"time"
 
@@ -83,6 +85,11 @@ func main() {
 
 	r := gin.Default() //打开服务器
 	r.Use(Cors())
+
+	// 引用数据库
+	repository.InitDB()
+	// 用户登录、注册、收藏夹等部分的路由
+	routers.InitRouter(r)
 
 	// 加载 html 文件
 	r.LoadHTMLFiles("./view.html")
