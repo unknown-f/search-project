@@ -5,6 +5,7 @@
         var pageSize = 3;
         var searchRes;
         var collection;
+        
 
         function changePage(page){
             document.getElementById(currPage).setAttribute('class','');
@@ -25,22 +26,35 @@
 
         function flushUser(){
             if(user == ""){
-                
-            }
-        }
-
-        function showRightUpBox(registerORlogin){
-            if(registerORlogin == "register"){
-                document.getElementById("loginBtn").value="注册";
+                document.getElementById("usrName").innerText="未登录";
+                document.getElementById("usrName").style.color = "red";
+                document.getElementById("login").innerText='登录';
+                document.getElementById("register").innerText="注册";
             }
             else{
+                document.getElementById("usrName").innerText=user;
+                document.getElementById("usrName").style.color = "blue";
+                document.getElementById("login").innerText='切换用户';
+                document.getElementById("register").innerText="注销";
+            }
+        }
+        function showRightUpBox(registerORlogin){
+            if(registerORlogin == "login"){
                 document.getElementById("loginBtn").value="登录";
+            }
+            else{
+                if(document.getElementById("register").innerText == "注册")
+                    document.getElementById("loginBtn").value="注册";
+                else{
+                    user = "";
+                    flushUser();
+                }
             }
             document.getElementById("rightupBox").style.display="block";
         }
 
         function login(){
-            time = "time"
+            time = "time";
             var method = document.getElementById("loginBtn").value;
             var usrName = document.getElementById("inputUserName").value;
             var pwd = document.getElementById("inputPWD").value;
@@ -71,26 +85,22 @@
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        // var ret = xhr.responseText;
-                        // var obj = JSON.parse(ret)
-
-                        // var i;
-                        // var idx = obj.ReturnRes;
-                        // searchRes = new Array(idx.length)
-                        // for (var i=0;i<idx.length;i++){
-                        //     searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
-                        // }
-                        // document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
-                        // for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
-                        //     document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
-                        // }
-                        // currPage = 0;
+                        if(method == "登录"){
+                            user = usrName;
+                        }
+                        cancelLogin();
                         flushUser();
                     }
                     else{
                         alert("Problem retrieving XML data:" + this.status);
                     }
                 }
+
+                if(method == "登录"){
+                    user = usrName;
+                }
+                cancelLogin();
+                flushUser();
             }
         }
 
@@ -112,7 +122,7 @@
         }
 
         function searching(){
-            time = "time"
+            time = "time";
             text = document.getElementById("input").value;
             var xhr = new XMLHttpRequest();
 
@@ -156,31 +166,45 @@
 		<title>搜索引擎</title>
         <style>
             #rightup{
-                width: 100px;
-                height: 50px;
+                width: 150px;
+                height: 200px;
                 position: absolute;
                 top:0px;
                 right:0px;
             }
-
+            #usrName{
+                color: red;
+                position: absolute;
+                top:0px;
+                right:0px;
+            }
+            #api{
+                position: absolute;
+                top: 20;
+                right: 0;
+                width: 110px;
+            }
+            #login{
+                position: absolute;
+                right: 0;
+            }
+            #register{
+                margin-left: 0px;
+            }
             #rightupBox{
+                position: absolute;
+                top: 50;
+                right: 0;
                 display:none;
             }
-            #loginBtn{
-                width: 45%;
-                float: left;
-            }
             #cancelBtn{
-                width: 45%;
-                float: left;
+                width: 50%;
+                float: right;
             }
-            /* #right{
-                width: 300px;
-                height: 600px;
-                position: absolute;
-                top:200px;
-                right:0px;
-            } */
+            #loginBtn{
+                width: 50%;
+                float: right;
+            }
 
             ul.pagination {
                 display: inline-block;
@@ -205,6 +229,7 @@
                 border: 1px solid #2c73c5;
             }
             ul.pagination li a:hover:not(.active) {background-color: #ddd;}
+            
 
 
         </style>
@@ -212,17 +237,20 @@
 
 	<body>
         <div id="rightup">
-            <a id="register" onclick="showRightUpBox(this.id)">注册&nbsp&nbsp</a>
-            <a id="login" onclick="showRightUpBox(this.id)">&nbsp&nbsp登录</a>
+            <div id="usrName"><a >未登录</a><br></div>
+            <div id="api">
+                <a id="register" onclick="showRightUpBox(this.id)">注册</a>
+                <a id="login" onclick="showRightUpBox(this.id)">登录</a>
+            </div>
             <div id="rightupBox">
-                <div class="login-item"><input type="test" id="inputUserName" placeholder="输入用户名" size="8"/></div>
-                <div class="login-item"><input type="password" id="inputPWD" placeholder="输入密码"  size="8"/></div>
+                <div class="login-item"><input type="test" id="inputUserName" placeholder="输入用户名" size="11"/></div>
+                <div class="login-item"><input type="password" id="inputPWD" placeholder="输入密码"  size="11"/></div>
 
-                <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login()"/></div>
                 <div class="login-item"><input type="submit" id="cancelBtn" value="取消" size="2" onclick="cancelLogin()"/></div>
+                <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login()"/></div>
             </div>
         </div>
-		<img src="./logo.png" width="200" height="30" />
+		<img src="./logo.png" width="200" height="50" />
         <br>
 
 		<input id="input" type="text" name="target" size="40">
