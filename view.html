@@ -96,6 +96,25 @@
             }
         }
 
+        function addFav(){
+            var xhr = new XMLHttpRequest();
+            let favName = document.getElementById("collectionAddText").value;
+
+            xhr.open("post", "/favo/add");
+            xhr.timeout = 2000;
+            xhr.send('{"name":"'+favName+'"}')
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        document.getElementById("collectionAddText").value = "";
+                        getFav();
+                        flushFav();
+                    }
+                }
+            }
+        }
         function login(){
             var method = document.getElementById("loginBtn").value;
             var usrName = document.getElementById("inputUserName").value;
@@ -266,8 +285,20 @@
                 display: none;
             }
             #collectionHead{
+                width: 240;
                 color: blue;
                 /* font-size: 20; */
+            }
+            #collectionBtn{
+                position: absolute;
+                top:0;
+                right: 115;
+            }
+            #collectionAddText{
+                position: absolute;
+                top:3;
+                right: 5;
+                display: block;
             }
             ul.pagination {
                 display: inline-block;
@@ -326,7 +357,14 @@
 		</form>
         <hr>
         <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;"></div>
-        <div id="collection"><div id="collectionHead"><b>收藏夹列表</b></div><hr style="background-color: #2a14ee;height: 1px; border: none;"></div>
+        <div id="collection">
+            <div>
+                <div id="collectionHead"><b>收藏夹列表</b></div>
+                <input id="collectionBtn" type="submit" value="添加" onclick="addFav()">
+                <input id="collectionAddText" type="input" value="" size="10">
+            </div>
+            <hr style="background-color: #2a14ee;height: 1px; border: none;">
+        </div>
 		<div id="content" style="height:800px"></div>
 
         <ul id="pagelist" class="pagination"></ul>
