@@ -30,31 +30,47 @@
                 document.getElementById("usrName").style.color = "red";
                 document.getElementById("login").innerText='登录';
                 document.getElementById("register").innerText="注册";
+                document.getElementById("register").onclick = showRightUpBox;
             }
             else{
                 document.getElementById("usrName").innerText=user;
                 document.getElementById("usrName").style.color = "blue";
                 document.getElementById("login").innerText='切换用户';
                 document.getElementById("register").innerText="注销";
+                document.getElementById("register").onclick = dropUserName;
             }
         }
+
+        function dropUserName(){
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("get", "/user/"+user);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        user = "";
+                        flushUser();
+                    }
+                }
+            }
+            document.getElementById("rightupBox").style.display="none";
+        }
+
         function showRightUpBox(registerORlogin){
             if(registerORlogin == "login"){
                 document.getElementById("loginBtn").value="登录";
             }
             else{
-                if(document.getElementById("register").innerText == "注册")
-                    document.getElementById("loginBtn").value="注册";
-                else{
-                    user = "";
-                    flushUser();
-                }
+                document.getElementById("loginBtn").value="注册";
             }
             document.getElementById("rightupBox").style.display="block";
         }
 
         function login(){
-            time = "time";
             var method = document.getElementById("loginBtn").value;
             var usrName = document.getElementById("inputUserName").value;
             var pwd = document.getElementById("inputPWD").value;
@@ -77,9 +93,16 @@
             }
 
             var xhr = new XMLHttpRequest();
-            xhr.open("get", "http:127.0.0.1:8080/"+time+"/"+method+"/"+usrName+"/"+pwd, true);
-            xhr.timeout = 2000;
-            xhr.send(null)
+            if(method=="登录"){
+                xhr.open("post", "/user/login");
+                xhr.timeout = 2000;
+                xhr.send('{"username":"'+usrName+'","password":"'+pwd+'"}')
+            }
+            else{//注册
+                xhr.open("post", "/user/add");
+                xhr.timeout = 2000;
+                xhr.send('{"username":"'+usrName+'","password":"'+pwd+'"}')
+            }
             xhr.onreadystatechange=state_Change;
 
             function state_Change(){
@@ -95,12 +118,6 @@
                         alert("Problem retrieving XML data:" + this.status);
                     }
                 }
-
-                if(method == "登录"){
-                    user = usrName;
-                }
-                cancelLogin();
-                flushUser();
             }
         }
 
@@ -155,9 +172,7 @@
                         alert("Problem retrieving XML data:" + this.status);
                     }
                 }
-
             }
-
         }
     </script>
 
@@ -205,7 +220,20 @@
                 width: 50%;
                 float: right;
             }
-
+            #tophot{
+                position: absolute;
+                top: 150;
+                right:0px;
+                width: 400;
+                height: 300;
+            }
+            #collection{
+                position: absolute;
+                top: 500;
+                right:0px;
+                width: 400;
+                height: 400;
+            }
             ul.pagination {
                 display: inline-block;
                 padding: 0;
@@ -262,7 +290,8 @@
 			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
 		</form>
         <hr>
-
+        <div id="tophot"></div>
+        <div id="collection"></div>
 		<div id="content" style="height:800px"></div>
 
         <ul id="pagelist" class="pagination"></ul>
