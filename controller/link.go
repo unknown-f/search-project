@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// 添加文章
+// 添加链接
 func AddLink(c *gin.Context) {
 	var data repository.Link
 	// 绑定数据模型
@@ -30,7 +30,7 @@ func AddLink(c *gin.Context) {
 	})
 }
 
-// 根据分类获取文章列表
+// 根据收藏夹获取链接
 func GetLinkByFavo(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
@@ -46,7 +46,7 @@ func GetLinkByFavo(c *gin.Context) {
 	})
 }
 
-// 查询单个文章
+// 查询单个链接
 func GetLinkInfo(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	// 获取 username
@@ -61,7 +61,7 @@ func GetLinkInfo(c *gin.Context) {
 	})
 }
 
-// 查询文章列表
+// 查询链接列表
 func GetLinks(c *gin.Context) {
 	// 获取 username
 	username, _ := c.MustGet("username").(string)
@@ -75,7 +75,7 @@ func GetLinks(c *gin.Context) {
 	})
 }
 
-// 编辑文章
+// 编辑链接
 func EditLink(c *gin.Context) {
 	var data repository.Link
 	id, _ := strconv.Atoi(c.Param("id"))
@@ -97,7 +97,7 @@ func EditLink(c *gin.Context) {
 	})
 }
 
-// 删除文章
+// 删除链接
 func DeleteLink(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	// 获取 username
