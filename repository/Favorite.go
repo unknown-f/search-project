@@ -24,7 +24,7 @@ func CheckFavorite(name string) int {
 	return errmsg.SUCCESS
 }
 
-// 添加分类
+// 添加收藏夹
 func CreateFavorite(data *Favorite) int {
 	err := db.Create(&data).Error
 	if err != nil {
@@ -33,7 +33,7 @@ func CreateFavorite(data *Favorite) int {
 	return errmsg.SUCCESS
 }
 
-// 查询分类列表
+// 查询收藏夹列表
 func GetFavorites(username string) []Favorite {
 	var favos []Favorite
 	//err = db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cates).Error
@@ -44,7 +44,7 @@ func GetFavorites(username string) []Favorite {
 	return favos
 }
 
-// 编辑分类信息
+// 编辑收藏夹信息
 func EditFavorite(id int, username string, data *Favorite) int {
 	var favo Favorite
 
@@ -55,7 +55,7 @@ func EditFavorite(id int, username string, data *Favorite) int {
 	return errmsg.SUCCESS
 }
 
-// 删除分类
+// 删除收藏夹
 func DeleteFavorite(id int, username string) int {
 	var favo Favorite
 	err = db.Where("id = ? and username = ?", id, username).Delete(&favo).Error

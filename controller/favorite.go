@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// 添加分类
+// 添加收藏夹
 func AddFavorite(c *gin.Context) {
 	var data repository.Favorite
 	_ = c.ShouldBindJSON(&data)
@@ -28,7 +28,7 @@ func AddFavorite(c *gin.Context) {
 	})
 }
 
-// 查询分类列表
+// 查询收藏夹列表
 func GetFavorites(c *gin.Context) {
 	username, _ := c.MustGet("username").(string)
 	data := repository.GetFavorites(username)
@@ -42,7 +42,7 @@ func GetFavorites(c *gin.Context) {
 
 }
 
-// 编辑分类
+// 编辑收藏夹
 func EditFavorite(c *gin.Context) {
 	var data repository.Favorite
 	id, _ := strconv.Atoi(c.Param("id"))
@@ -64,7 +64,7 @@ func EditFavorite(c *gin.Context) {
 
 }
 
-// 删除分类
+// 删除收藏夹
 func DeleteFavorite(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	username, _ := c.MustGet("username").(string)

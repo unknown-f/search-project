@@ -17,7 +17,7 @@ type Link struct {
 	Username string `gorm:"varchar(20);not null" json:"username"`
 }
 
-// 查询文章是否存在
+// 查询链接是否存在
 func CheckLink(title string, username string) int {
 	var link Link
 	link.ID = 0
@@ -28,7 +28,7 @@ func CheckLink(title string, username string) int {
 	return errmsg.SUCCESS
 }
 
-// 创建文章
+// 创建链接
 func CreateLink(data *Link) int {
 	err = db.Create(&data).Error
 	if err != nil {
@@ -37,7 +37,7 @@ func CreateLink(data *Link) int {
 	return errmsg.SUCCESS
 }
 
-// 根据分类获取文章列表
+// 根据收藏夹获取链接
 func GetLinkByFavorite(id int, username string) []Link {
 	var linkByFavo []Link
 	//err := db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Where("cid = ?", id).Find(&linkByFavo).Error
@@ -49,7 +49,7 @@ func GetLinkByFavorite(id int, username string) []Link {
 	return linkByFavo
 }
 
-// 获取单个文章
+// 获取单个链接
 func GetLinkInfo(id int, username string) Link {
 	var link Link
 	err := db.Preload("Favorite").Where("id = ? and username = ?", id, username).First(&link).Error
@@ -60,7 +60,7 @@ func GetLinkInfo(id int, username string) Link {
 	return link
 }
 
-// 获取文章列表
+// 获取链接列表
 func GetLinks(username string) []Link {
 	var links []Link
 	//err = db.Preload("Category").Limit(pageSize).Offset((pageNum -1 ) * pageSize).Find(&links).Error
@@ -71,7 +71,7 @@ func GetLinks(username string) []Link {
 	return links
 }
 
-// 编辑文章
+// 编辑链接
 func EditLink(id int, username string, data *Link) int {
 	var link Link
 
@@ -84,7 +84,7 @@ func EditLink(id int, username string, data *Link) int {
 
 }
 
-// 删除文章
+// 删除链接
 func DeleteLink(id int, username string) int {
 	var link Link
 	err = db.Where("id = ? and username = ?", id, username).Delete(&link).Error
