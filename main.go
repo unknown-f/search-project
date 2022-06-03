@@ -84,7 +84,10 @@ func main() {
 	c_indextodoc = db.C("indextosource")
 	c_keytoindx = db.C("keytoindex")
 	// ReadCutAndWrite(x)
-	initRedis()
+	err = initRedis()
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(redisdb.ZIncrBy("hotdoc", 1, "doc1").Result())
 	r := gin.Default() //打开服务器
 	r.Use(Cors())
@@ -149,8 +152,15 @@ func SearchOneRltToDoc(docid int) Doc {
 	var docrltp Doc
 	redisrlt, errs := redisdb.Get("doc:" + strconv.Itoa(docid)).Result()
 	if errs != nil {
+		var redisbyte []byte
 		c_indextodoc.Find(bson.M{"ID": docid}).One(&docrltp)
-		redisdb.Set("doc:"+strconv.Itoa(docid), docrltp, time.Hour*24)
+		redisbyte, errs = json.Marshal(docrltp)
+		if errs != nil {
+			fmt.Println(errs)
+		} else {
+			redisdb.Set("doc:"+strconv.Itoa(docid), string(redisbyte), time.Hour*24)
+		}
+
 	} else {
 		fmt.Println("read from redis", docid)
 		redisdb.ZIncrBy("hotdoc", 1, "doc:"+strconv.Itoa(docid)).Result()
@@ -178,16 +188,27 @@ func Search(text string, maxnumofrlt int, jbfc *gojieba.Jieba) []SearchRlt {
 	words := CutWords(text, jbfc)
 	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
-		errread := c_keytoindx.Find(bson.M{"Name": value}).One(&keysearchrltp)
+		redisrlt, errread := redisdb.Get("keyword:" + value).Result()
 		if errread != nil {
-			fmt.Println(errread)
-		} else {
-			redisdb.Set("keyword:"+value, keysearchrltp, time.Hour*24)
-			redisdb.ZIncrBy("hotkeyword", 1, "keyword:"+value).Result()
-			//redisdb.ZAdd("hotkeyword", redis.Z{Score: 1, Member: "keyword:" + value})
-			for _, docid := range keysearchrltp.DocList {
-				keyword_ifidf[docid] += 1 / float32(len(keysearchrltp.DocList))
+			var redisbyte []byte
+			fmt.Println("read1", errread)
+			errread = c_keytoindx.Find(bson.M{"Name": value}).One(&keysearchrltp)
+			redisbyte, errread = json.Marshal(keysearchrltp)
+			if errread != nil {
+				fmt.Println(errread)
+			} else {
+				redisdb.Set("keyword:"+value, string(redisbyte), time.Hour*24).Result()
 			}
+		} else {
+			redisdb.ZIncrBy("hotkeyword", 1, "keyword:"+value).Result()
+			errread = json.Unmarshal([]byte(redisrlt), &keysearchrltp)
+			if errread != nil {
+				fmt.Println(errread)
+			}
+			//redisdb.ZAdd("hotkeyword", redis.Z{Score: 1, Member: "keyword:" + value})
+		}
+		for _, docid := range keysearchrltp.DocList {
+			keyword_ifidf[docid] += 1 / float32(len(keysearchrltp.DocList))
 		}
 	}
 	if len(keyword_ifidf) != 0 {
