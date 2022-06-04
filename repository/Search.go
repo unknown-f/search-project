@@ -64,15 +64,18 @@ func InitJieba() {
 func SearchTopNDoc(NDoc int64) []Doc {
 	var docrlt []Doc
 	hotdoc, _ := redisdb.ZRevRangeWithScores("hotdoc", 0, NDoc).Result()
+	fmt.Println(hotdoc)
 	for _, docid := range hotdoc {
-		docrlt = append(docrlt, SearchOneRltToDoc(docid.Member.(int)))
+		docidint, _ := strconv.Atoi(docid.Member.(string))
+		docrlt = append(docrlt, SearchOneRltToDoc(docidint))
 	}
 	return docrlt
 }
 
-func SearchTopNKeyword(NDoc int64) []string {
+func SearchTopNKeyword(NWord int64) []string {
 	var hotkeywords []string
-	hotkeyword, _ := redisdb.ZRevRangeWithScores("hotkeyword", 0, NDoc).Result()
+	hotkeyword, _ := redisdb.ZRevRangeWithScores("hotkeyword", 0, NWord).Result()
+	fmt.Println(hotkeyword)
 	for _, docid := range hotkeyword {
 		hotkeywords = append(hotkeywords, docid.Member.(string))
 	}
@@ -95,7 +98,7 @@ func SearchOneRltToDoc(docid int) Doc {
 		}
 	} else {
 		fmt.Println("read from redis", docid)
-		redisdb.ZIncrBy("hotdoc", 1, "doc:"+strconv.Itoa(docid)).Result()
+		redisdb.ZIncrBy("hotdoc", 1, strconv.Itoa(docid)).Result()
 		errs = json.Unmarshal([]byte(redisrlt), &docrltp)
 		if errs != nil {
 			fmt.Println(errs)
@@ -132,7 +135,7 @@ func Search(text string, maxnumofrlt int) []SearchRlt {
 				redisdb.Set("keyword:"+value, string(redisbyte), time.Hour*24).Result()
 			}
 		} else {
-			redisdb.ZIncrBy("hotkeyword", 1, "keyword:"+value).Result()
+			redisdb.ZIncrBy("hotkeyword", 1, value).Result()
 			errread = json.Unmarshal([]byte(redisrlt), &keysearchrltp)
 			if errread != nil {
 				fmt.Println(errread)

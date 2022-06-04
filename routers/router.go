@@ -62,7 +62,8 @@ func InitRouter() error {
 		r.GET("/", func(c *gin.Context) {
 			c.HTML(200, "view.html", nil)
 		})
-
+		r.POST("/hotdoc", controller.SearchTopNDoc)
+		r.POST("/hotkeyword", controller.SearchTopNKeyword)
 		r.GET("/:time/:text", controller.Search)
 	}
 	err := r.Run()
