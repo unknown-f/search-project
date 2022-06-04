@@ -8,15 +8,15 @@ import (
 
 type Favorite struct {
 	ID       uint   `gorm:"primary_key;auto_increment" json:"id"`
-	Name     string `gorm:"type:varchar(20);not null" json:"name"`
+	Name     string `gorm:"type:varchar(50);not null" json:"name"`
 	Username string `gorm:"varchar(20);not null" json:"username"`
 }
 
 // 查询收藏夹是否存在
-func CheckFavorite(name string) int {
+func CheckFavorite(name string, username string) int {
 	var favo Favorite
 	favo.ID = 0
-	db.Select("id").Where("name = ?", name).First(&favo)
+	db.Select("id").Where("name = ? and username = ?", name, username).First(&favo)
 	if favo.ID > 0 {
 		fmt.Printf("Favorite名字已存在， ID: %d\n", favo.ID)
 		return errmsg.ERROR_FAVORITENAME_USED
@@ -56,9 +56,9 @@ func EditFavorite(id int, username string, data *Favorite) int {
 }
 
 // 删除收藏夹
-func DeleteFavorite(id int, username string) int {
+func DeleteFavorite(name string, username string) int {
 	var favo Favorite
-	err = db.Where("id = ? and username = ?", id, username).Delete(&favo).Error
+	err = db.Where("name = ? and username = ?", name, username).Delete(&favo).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

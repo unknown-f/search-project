@@ -13,7 +13,7 @@ func AddFavorite(c *gin.Context) {
 	var data repository.Favorite
 	_ = c.ShouldBindJSON(&data)
 	data.Username, _ = c.MustGet("username").(string)
-	code := repository.CheckFavorite(data.Name)
+	code := repository.CheckFavorite(data.Name, data.Username)
 	if code == errmsg.SUCCESS {
 		repository.CreateFavorite(&data)
 	}
@@ -48,7 +48,7 @@ func EditFavorite(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	c.ShouldBindJSON(&data)
 	username, _ := c.MustGet("username").(string)
-	code := repository.CheckFavorite(data.Name)
+	code := repository.CheckFavorite(data.Name, username)
 	if code == errmsg.SUCCESS {
 		repository.EditFavorite(id, username, &data)
 	}
@@ -66,9 +66,10 @@ func EditFavorite(c *gin.Context) {
 
 // 删除收藏夹
 func DeleteFavorite(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	//id, _ := strconv.Atoi(c.Param("id"))
+	name := c.Param("name")
 	username, _ := c.MustGet("username").(string)
-	code := repository.DeleteFavorite(id, username)
+	code := repository.DeleteFavorite(name, username)
 
 	c.JSON(http.StatusOK, gin.H{
 		"ststus":  code,
