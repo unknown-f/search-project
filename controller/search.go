@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"searchproject/repository"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,4 +19,22 @@ func Search(c *gin.Context) {
 	}
 	fmt.Println("return:", data)
 	c.JSON(200, data)
+}
+
+func SearchTopNDoc(c *gin.Context) {
+	num, err := strconv.ParseInt(c.PostForm("num"), 10, 64)
+	if err != nil {
+		c.JSON(406, "请求的数量不是整数")
+	} else {
+		c.JSON(200, repository.SearchTopNDoc(num))
+	}
+}
+
+func SearchTopNKeyword(c *gin.Context) {
+	num, err := strconv.ParseInt(c.PostForm("num"), 10, 64)
+	if err != nil {
+		c.JSON(406, "请求的数量不是整数")
+	} else {
+		c.JSON(200, repository.SearchTopNKeyword(num))
+	}
 }
