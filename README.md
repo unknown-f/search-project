@@ -11,5 +11,11 @@
 
 第一次启动时去掉ReadCutAndWrite的注释，用于建立检索数据库，wukong50k_release.csv这个数据集大概需要2个小时建立数据库
 ```
-
-前后端交互：运行main，打开html文件，应该就能搜索了。功能可能还不太完善，后续再改
+用户请求：
+get("/")-请求页面
+get("/hot")-请求热榜
+get("/search/text/:time/:text")-搜索text
+get("/search/picture/:time/:picture")-搜图
+get("/register/:time/:userName/:passWord")-注册用户名和密码
+get("/login/:time/:userName/:passWord")-登录用户名密码，需要返回收藏夹
+get("/drop/:time/:userName")-用户注销
