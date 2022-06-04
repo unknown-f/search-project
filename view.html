@@ -167,6 +167,10 @@
             var xhr = new XMLHttpRequest();
 
             xhr.open("get", "/favo/favos");
+<<<<<<< HEAD
+=======
+            console.log(token);
+>>>>>>> 03d588f1d3eaa94f98ebb9f9543298b5e7bc186c
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
@@ -235,6 +239,9 @@
                 alert("请输入收藏夹名");
                 return;
             }
+
+            console.log(token);
+            xhr.setRequestHeader('Auth','Bearer '+token);
             xhr.open("post", "/favo/add");
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
@@ -265,7 +272,6 @@
                 return;
             }
             let link = searchRes[Number(currPage*pageSize) + Number(linkId)-1];
-            // let tmpText = link.Text;
             let tmpText = "";
             for(let i = 0; i<link.Text.length; i++){
                 if(link.Text[i]=='"'){
