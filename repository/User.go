@@ -2,10 +2,12 @@ package repository
 
 import (
 	"encoding/base64"
-	"golang.org/x/crypto/scrypt"
-	"gorm.io/gorm"
+	"fmt"
 	"log"
 	"searchproject/utils/errmsg"
+
+	"golang.org/x/crypto/scrypt"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -20,6 +22,7 @@ func CheckUser(name string) (code int) {
 	var users User
 	users.ID = 0
 	db.Select("id").Where("username = ?", name).First(&users)
+	fmt.Println(users)
 	if users.ID > 0 {
 		return errmsg.ERROR_USERNAME_USED
 	}
@@ -99,8 +102,6 @@ func CheckLogin(username, password string) int {
 	if ScryptPw(password) != user.Password {
 		return errmsg.ERROR_PASSWORD_WRONG
 	}
-
 	//TODO 还需要认证是否同一用户
-
 	return errmsg.SUCCESS
 }
