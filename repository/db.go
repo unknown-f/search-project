@@ -1,18 +1,67 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
+	"searchproject/utils"
+	"time"
+
+	"github.com/go-redis/redis"
+	"gopkg.in/mgo.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"searchproject/utils"
-	"time"
 )
 
 var db *gorm.DB
+var redisdb *redis.Client
+var c_indextodoc *mgo.Collection //docid与doc的对应关系集合
+var c_keytoindx *mgo.Collection  //关键词与docid的对应关系集合
 var err error
 
-func InitDB() {
+func InitDB() error {
+	err = InitMysql()
+	if err != nil {
+		return err
+	}
+	err = InitRedis()
+	if err != nil {
+		return err
+	}
+	err = InitMongodb()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func InitRedis() error {
+	redisdb = redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379", // 指定
+		Password: "",
+		DB:       0, // redis一共16个库，指定其中一个库即可
+	})
+	_, err = redisdb.Ping().Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func InitMongodb() error {
+	session, err := mgo.Dial("localhost:27017") //连接数据库
+	if err != nil {
+		return err
+	}
+	session.SetMode(mgo.Monotonic, true)
+	mgodb := session.DB("search_project")
+	c_indextodoc = mgodb.C("indextosource")
+	c_keytoindx = mgodb.C("keytoindex")
+	return nil
+}
+
+func InitMysql() error {
+	var DB *sql.DB
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		utils.DbUser,
 		utils.DbPassword,
@@ -26,16 +75,19 @@ func InitDB() {
 		},
 	})
 	if err != nil {
-		fmt.Println("连接数据库失败：", err)
+		return err
 	}
 
-	err := db.AutoMigrate(&User{}, &Favorite{}, &Link{})
+	err = db.AutoMigrate(&User{}, &Favorite{}, &Link{})
 	if err != nil {
-		return
+		return err
 	}
-
-	DB, _ := db.DB()
+	DB, err = db.DB()
+	if err != nil {
+		return err
+	}
 	DB.SetMaxIdleConns(10)
 	DB.SetMaxOpenConns(200)
 	DB.SetConnMaxLifetime(100 * time.Second)
+	return nil
 }
