@@ -43,7 +43,7 @@
             else{
                 document.getElementById("usrName").innerText=user;
                 document.getElementById("usrName").style.color = "blue";
-                document.getElementById("login").innerText='切换用户';
+                document.getElementById("login").innerText='切换/退出';
                 document.getElementById("register").innerText="注销";
                 document.getElementById("register").onclick = dropUserName;
             }
@@ -90,10 +90,26 @@
                     }
                 }
             }
+            document.getElementById("inputUserName").value="";
+            document.getElementById("inputPWD").value="";
             document.getElementById("rightupBox").style.display="none";
         }
+        function loginOrQuit(){
+            if(user!=""){
+                let uN = document.getElementById("inputUserName").value;
+                if(uN == ""){
+                    document.getElementById("loginBtn").value="退出";
+                }
+                else{
+                    document.getElementById("loginBtn").value="登录";
+                }
+            }
+        }
         function showRightUpBox(registerORlogin){
-            if(registerORlogin == "login"){
+            if(user != ""){
+                document.getElementById("loginBtn").value="退出";
+            }
+            else if(registerORlogin == "login"){
                 document.getElementById("loginBtn").value="登录";
             }
             else{
@@ -190,6 +206,8 @@
             xhr.onreadystatechange=state_Change;
 
             function state_Change(){
+
+                console.log(xhr);
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
                         if(method == "登录"){
@@ -387,7 +405,7 @@
                 <a id="login" onclick="showRightUpBox(this.id)">登录</a>
             </div>
             <div id="rightupBox">
-                <div class="login-item"><input type="test" id="inputUserName" placeholder="输入用户名" size="11"/></div>
+                <div class="login-item"><input type="test" id="inputUserName" placeholder="输入用户名" onkeyup="loginOrQuit()" size="11"/></div>
                 <div class="login-item"><input type="password" id="inputPWD" placeholder="输入密码"  size="11"/></div>
 
                 <div class="login-item"><input type="submit" id="cancelBtn" value="取消" size="2" onclick="cancelLogin()"/></div>
