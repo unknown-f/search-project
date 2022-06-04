@@ -1,6 +1,7 @@
 <html>
     <script>
         var user = "";
+        var token = "";
         var currPage;
         var pageSize = 3;
         var searchRes;
@@ -16,7 +17,31 @@
             }
         };
         var collection = "";
-        
+        function useAlert(errCode){
+            switch(errCode){
+                case 1001:
+                    alert("ERROR_USERNAME_USED");
+                    break;
+                case 1002:
+                    alert("ERROR_PASSWORD_WRONG");
+                    break;
+                case 1003:
+                    alert("ERROR_USER_NOT_EXIST");
+                    break;
+                case 1004:
+                    alert("ERROR_TOKEN_EXIST");
+                    break;
+                case 1005:
+                    alert("ERROR_TOKEN_RUNTIME");
+                    break;
+                case 1006:
+                    alert("ERROR_TOKEN_WRONG");
+                    break;
+                case 1007:
+                    alert("ERROR_TOKEN_TYPE");
+                    break;
+            }
+        }
         function changePage(page){
             document.getElementById(currPage).setAttribute('class','');
             document.getElementById(page).setAttribute('class','active');
@@ -84,9 +109,17 @@
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        user = "";
-                        flushUser();
-                        flushFav();
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        console.log(obj);
+                        if(obj.status == 200){
+                            user = "";
+                            flushUser();
+                            flushFav();
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
                     }
                 }
             }
@@ -121,6 +154,8 @@
             var xhr = new XMLHttpRequest();
 
             xhr.open("get", "/favo/favos");
+            console.log(token);
+            xhr.setRequestHeader('Auth','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;
@@ -128,7 +163,15 @@
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        console.log("get fav");
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        console.log(obj);
+                        if(obj.status == 200){
+                            console.log("get fav");
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
                     }
                 }
             }
@@ -138,8 +181,28 @@
             flushFav();
         }
         function deleteFav(favName){
-            
-            console.log("delete",favName);
+            var xhr = new XMLHttpRequest();
+            favName = favName.slice(9);
+            xhr.open("get", "/favo/",favName);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        console.log(obj);
+                        if(obj.status == 200){
+                            console.log("deleteFav,success");
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
         }
         function favBack(){
             collection = "";
@@ -160,9 +223,17 @@
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        document.getElementById("collectionAddText").value = "";
-                        getFav();
-                        flushFav();
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        console.log(obj);
+                        if(obj.status == 200){
+                            document.getElementById("collectionAddText").value = "";
+                            getFav();
+                            flushFav();
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
                     }
                 }
             }
@@ -171,7 +242,14 @@
             console.log("addLnk");
         }
         function login(){
-            var method = document.getElementById("loginBtn").value;
+            let method = document.getElementById("loginBtn").value;
+            if(method == "退出"){
+                user = "";
+                document.getElementById("rightupBox").style.display="none";
+                flushUser();
+                return;
+            }
+
             var usrName = document.getElementById("inputUserName").value;
             var pwd = document.getElementById("inputPWD").value;
 
@@ -206,17 +284,24 @@
             xhr.onreadystatechange=state_Change;
 
             function state_Change(){
-
-                console.log(xhr);
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        if(method == "登录"){
-                            user = usrName;
-                            getFav();
-                            flushFav();
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        console.log(obj);
+                        if(obj.status == 200){
+                            if(method == "登录"){
+                                user = usrName;
+                                token = obj.token;
+                                getFav();
+                                flushFav();
+                            }
+                            cancelLogin();
+                            flushUser();
                         }
-                        cancelLogin();
-                        flushUser();
+                        else{
+                            useAlert(obj.status);
+                        }
                     }
                     else{
                         alert("Problem retrieving XML data:" + this.status);
@@ -253,8 +338,8 @@
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
                     if (this.status==200){// 200 = "OK"
-                        var ret = xhr.responseText;
-                        var obj = JSON.parse(ret)
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret)
 
                         var i;
                         var idx = obj.ReturnRes;
@@ -438,7 +523,7 @@
                 <div id="collectionInner" style="height: 350px;"></div>
             </div>
         </div>
-		<div id="content" style="height:800px"></div>
+		<div id="content" style="width:700px; height:800px"></div>
         <ul id="pagelist" class="pagination"></ul>
 
         <p></p>
