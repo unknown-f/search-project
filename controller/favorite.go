@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 添加收藏夹
@@ -72,7 +73,7 @@ func DeleteFavorite(c *gin.Context) {
 	code := repository.DeleteFavorite(name, username)
 
 	c.JSON(http.StatusOK, gin.H{
-		"ststus":  code,
+		"status":  code,
 		"message": errmsg.GetErrMsg(code),
 	})
 }

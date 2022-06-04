@@ -5,17 +5,18 @@
         var currPage;
         var pageSize = 3;
         var searchRes;
-        var collectionList = {
-            "收藏夹名":{
-                "链接1的文本":"链接1的url","链接2的文本":"链接2的url"
-            },
-            "1":{
-                "sd":"jjjj","sdd":"jjjkk"
-            },
-            "第二个":{
-                "sd":"jkljkl","sdfsdfsf":"kljl"
-            }
-        };
+        var collectionList = new Map();
+        // {
+        //     "收藏夹名":{
+        //         "链接1的文本":"链接1的url","链接2的文本":"链接2的url"
+        //     },
+        //     "1":{
+        //         "sd":"jjjj","sdd":"jjjkk"
+        //     },
+        //     "第二个":{
+        //         "sd":"jkljkl","sdfsdfsf":"kljl"
+        //     }
+        // };
         var collection = "";
         function useAlert(errCode){
             switch(errCode){
@@ -40,6 +41,12 @@
                 case 1007:
                     alert("ERROR_TOKEN_TYPE");
                     break;
+                case 2001:
+                    alert("ERROR_LINKNAME_USED");
+                    break;
+                case 3001:
+                    alert("ERROR_FAVORITENAME_USED");
+                    break;
             }
         }
         function changePage(page){
@@ -54,7 +61,8 @@
                 if(currPage*pageSize+i>=searchRes.length){
                     break;
                 }
-                document.getElementById("content").innerHTML += searchRes[currPage*pageSize+i];
+                // searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
+                document.getElementById("content").innerHTML += "<a target=\"_blank\"href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"<br/>";
             }
         }
         function flushUser(){
@@ -81,16 +89,17 @@
             document.getElementById("collection").style.display = "block";
             document.getElementById("collectionInner").innerHTML = "";
             if(collection == ""){//查看收藏夹列表
-                for(let key in collectionList){
-                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="favNameQ+'+key+'" style="height:25px;width:350px;display:block;float:left;" onclick="goToFav(this.id)">'+key+'</a><input type="submit" id="favNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteFav(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                for(let [key,value] of collectionList){
+                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="favNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" onclick="goToFav(this.id)">'+key+'</a><input type="submit" id="favNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteFav(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
                 }
                 document.getElementById("collectionBack").style.display = "none";
                 document.getElementById("collectionBtn").onclick = addFav;
                 document.getElementById("collectionAddText").placeholder = "新的收藏夹名";
             }
             else{//查看某个收藏夹
-                for(let key in collectionList[collection]){
-                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="height:25px;width:350px;display:block;float:left;" onclick="goToLnk(this.id)">'+key+'</a><input type="submit" id="lnkNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                let theMap = collectionList.get(collection);
+                for(let [key,value] of theMap){
+                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" target=\"_blank\" href="'+value+'">'+key+'</a><input type="submit" id="lnkNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
                 }
                 document.getElementById("collectionBack").style.display = "block";
                 document.getElementById("collectionBtn").onclick = addLnk;
@@ -101,7 +110,8 @@
         function dropUserName(){
             var xhr = new XMLHttpRequest();
 
-            xhr.open("get", "/user/"+user);
+            xhr.open("delete", "/user/"+user);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;
@@ -111,11 +121,11 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        console.log(obj);
                         if(obj.status == 200){
                             user = "";
+                            token = "";
                             flushUser();
-                            flushFav();
+                            getFav();
                         }
                         else{
                             useAlert(obj.status);
@@ -139,7 +149,7 @@
             }
         }
         function showRightUpBox(registerORlogin){
-            if(user != ""){
+            if(user != "" && document.getElementById("inputUserName").value==""){
                 document.getElementById("loginBtn").value="退出";
             }
             else if(registerORlogin == "login"){
@@ -151,11 +161,13 @@
             document.getElementById("rightupBox").style.display="block";
         }
         function getFav(){
+            if(user == ""){
+                document.getElementById("collection").style.display = "none";
+            }
             var xhr = new XMLHttpRequest();
 
             xhr.open("get", "/favo/favos");
-            console.log(token);
-            xhr.setRequestHeader('Auth','Bearer '+token);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;
@@ -165,9 +177,13 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        console.log(obj);
                         if(obj.status == 200){
-                            console.log("get fav");
+                            collectionList = new Map();
+                            for(let key in obj.data){
+                                collectionList.set(obj.data[key].name,new Map());
+                                getLnk(obj.data[key].name);
+                            }
+                            flushFav();
                         }
                         else{
                             useAlert(obj.status);
@@ -183,7 +199,8 @@
         function deleteFav(favName){
             var xhr = new XMLHttpRequest();
             favName = favName.slice(9);
-            xhr.open("get", "/favo/",favName);
+            xhr.open("delete", "/favo/"+favName);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;
@@ -195,6 +212,9 @@
                         let obj = JSON.parse(ret);
                         console.log(obj);
                         if(obj.status == 200){
+                            document.getElementById("collectionAddText").value = "";
+                            console.log("to get Fav");
+                            getFav();
                             console.log("deleteFav,success");
                         }
                         else{
@@ -216,6 +236,7 @@
                 return;
             }
             xhr.open("post", "/favo/add");
+            xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send('{"name":"'+favName+'"}')
             xhr.onreadystatechange=state_Change;
@@ -225,11 +246,9 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        console.log(obj);
                         if(obj.status == 200){
                             document.getElementById("collectionAddText").value = "";
                             getFav();
-                            flushFav();
                         }
                         else{
                             useAlert(obj.status);
@@ -239,7 +258,68 @@
             }
         }
         function addLnk(){
-            console.log("addLnk");
+            var xhr = new XMLHttpRequest();
+            let linkId = document.getElementById("collectionAddText").value;
+            if(Number(currPage*pageSize) + Number(linkId) > searchRes.length || linkId > pageSize){
+                alert("请输入正确的序号");
+                return;
+            }
+            let link = searchRes[Number(currPage*pageSize) + Number(linkId)-1];
+            // let tmpText = link.Text;
+            let tmpText = "";
+            for(let i = 0; i<link.Text.length; i++){
+                if(link.Text[i]=='"'){
+                    tmpText += '\\';
+                }
+                tmpText += link.Text[i];
+            }
+
+            xhr.open("post", "/link/add");
+            xhr.setRequestHeader('Authorization','Bearer '+token);
+            xhr.timeout = 2000;
+            xhr.send('{"title":"'+tmpText+'","favoritename":"'+collection+'","content":"'+link.ImgUrl+'"}')
+            xhr.onreadystatechange=state_Change;
+            console.log('{"title":"'+link.Text+'","favoritename":"'+collection+'","content":"'+link.ImgUrl+'"}');
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj.status == 200){
+                            document.getElementById("collectionAddText").value = "";
+                            getFav();
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
+        }
+        function getLnk(favName){
+            var xhr = new XMLHttpRequest();
+            xhr.open("get", "/link/list/"+favName);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj.status == 200){
+                            for(let data of obj.data){
+                                collectionList.get(data.favoritename).set(data.title,data.content);
+                            }
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
         }
         function login(){
             let method = document.getElementById("loginBtn").value;
@@ -247,6 +327,7 @@
                 user = "";
                 document.getElementById("rightupBox").style.display="none";
                 flushUser();
+                getFav();
                 return;
             }
 
@@ -288,13 +369,11 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        console.log(obj);
                         if(obj.status == 200){
                             if(method == "登录"){
                                 user = usrName;
                                 token = obj.token;
                                 getFav();
-                                flushFav();
                             }
                             cancelLogin();
                             flushUser();
@@ -345,7 +424,7 @@
                         var idx = obj.ReturnRes;
                         searchRes = new Array(idx.length)
                         for (var i=0;i<idx.length;i++){
-                            searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
+                            searchRes[i] = idx[i];
                         }
                         document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
                         for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
