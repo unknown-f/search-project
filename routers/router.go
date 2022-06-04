@@ -35,7 +35,7 @@ func InitRouter(r *gin.Engine) {
 		authFavoRouter.POST("/add", controller.AddFavorite)
 		authFavoRouter.GET("favos", controller.GetFavorites)
 		authFavoRouter.PUT("/:id", controller.EditFavorite)
-		authFavoRouter.DELETE("/:id", controller.DeleteFavorite)
+		authFavoRouter.DELETE("/:name", controller.DeleteFavorite)
 	}
 
 	authlinkRouter := r.Group("link")
@@ -43,7 +43,7 @@ func InitRouter(r *gin.Engine) {
 	{
 		// link 模块路由
 		authlinkRouter.POST("/add", controller.AddLink)
-		authlinkRouter.GET("/list/:id", controller.GetLinkByFavo)
+		authlinkRouter.GET("/list/:favoritename", controller.GetLinkByFavo)
 		authlinkRouter.GET("/info/:id", controller.GetLinkInfo)
 		authlinkRouter.GET("/links", controller.GetLinks)
 		authlinkRouter.PUT("/:id", controller.EditLink)

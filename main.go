@@ -167,7 +167,6 @@ func SearchOneRltToDoc(docid int) Doc {
 		} else {
 			redisdb.Set("doc:"+strconv.Itoa(docid), string(redisbyte), time.Hour*24)
 		}
-
 	} else {
 		fmt.Println("read from redis", docid)
 		redisdb.ZIncrBy("hotdoc", 1, "doc:"+strconv.Itoa(docid)).Result()
