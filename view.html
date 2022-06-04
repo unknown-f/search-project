@@ -18,6 +18,30 @@
         //     }
         // };
         var collection = "";
+
+        function translateM(oriText,method){
+            if(method == "html"){
+                let targetText = "";
+                for(let i = 0; i<oriText.length; i++){
+                    if(oriText[i]=='"'){
+                        targetText += "&quot";
+                    }
+                    else{
+                        targetText += oriText[i];
+                    }
+                }
+                return targetText;
+            }
+            let targetText = "";
+            for(let i = 0; i<oriText.length; i++){
+                if(oriText[i]=='"'){
+                    targetText += '\\';
+                }
+                targetText += oriText[i];
+            }
+            return targetText;
+        }
+
         function useAlert(errCode){
             switch(errCode){
                 case 1001:
@@ -61,7 +85,6 @@
                 if(currPage*pageSize+i>=searchRes.length){
                     break;
                 }
-                // searchRes[i] = ("<a target=\"_blank\"href="+idx[i].ImgUrl+">"+idx[i].Text + "<br />");
                 document.getElementById("content").innerHTML += "<a target=\"_blank\"href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"<br/>";
             }
         }
@@ -99,7 +122,7 @@
             else{//查看某个收藏夹
                 let theMap = collectionList.get(collection);
                 for(let [key,value] of theMap){
-                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" target=\"_blank\" href="'+value+'">'+key+'</a><input type="submit" id="lnkNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" target=\"_blank\" href="'+value+'">'+key+'</a><input type="submit" id="lnkNameD+'+translateM(key,"html")+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
                 }
                 document.getElementById("collectionBack").style.display = "block";
                 document.getElementById("collectionBtn").onclick = addLnk;
@@ -266,13 +289,7 @@
                 return;
             }
             let link = searchRes[Number(currPage*pageSize) + Number(linkId)-1];
-            let tmpText = "";
-            for(let i = 0; i<link.Text.length; i++){
-                if(link.Text[i]=='"'){
-                    tmpText += '\\';
-                }
-                tmpText += link.Text[i];
-            }
+            let tmpText = translate(link.Text,"normal");
 
             xhr.open("post", "/link/add");
             xhr.setRequestHeader('Authorization','Bearer '+token);
