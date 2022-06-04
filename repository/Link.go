@@ -6,15 +6,11 @@ import (
 )
 
 type Link struct {
-	// 设置 Fid 为外键
-	Favorite Favorite `gorm:"foreignkey:Fid"`
 	gorm.Model
-	Title string `gorm:"type:varchar(100);not null" json:"title"`
-	// Fid 将 Link 与 Favorite 关联起来
-	Fid      int    `gorm:"type:int;not null" json:"fid"`
-	Content  string `gorm:"type:varchar(100)" json:"content"`
-	Img      string `gorm:"type:varchar(100)" json:"img"`
-	Username string `gorm:"varchar(20);not null" json:"username"`
+	Title        string `gorm:"type:varchar(100);not null" json:"title"`
+	Content      string `gorm:"type:varchar(100)" json:"content"`
+	Username     string `gorm:"varchar(20);not null" json:"username"`
+	Favoritename string `gorm:"type:varchar(50);not null" json:"favoritename"`
 }
 
 // 查询链接是否存在
@@ -38,10 +34,9 @@ func CreateLink(data *Link) int {
 }
 
 // 根据收藏夹获取链接
-func GetLinkByFavorite(id int, username string) []Link {
+func GetLinkByFavorite(favoritename string, username string) []Link {
 	var linkByFavo []Link
-	//err := db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Where("cid = ?", id).Find(&linkByFavo).Error
-	err := db.Preload("Favorite").Where("fid = ? and username = ?", id, username).Find(&linkByFavo).Error
+	err := db.Where("favoritename = ? and username = ?", favoritename, username).Find(&linkByFavo).Error
 
 	if err != nil {
 		return nil
@@ -52,7 +47,7 @@ func GetLinkByFavorite(id int, username string) []Link {
 // 获取单个链接
 func GetLinkInfo(id int, username string) Link {
 	var link Link
-	err := db.Preload("Favorite").Where("id = ? and username = ?", id, username).First(&link).Error
+	err := db.Where("id = ? and username = ?", id, username).First(&link).Error
 	if err != nil {
 		return link
 	}
@@ -63,8 +58,7 @@ func GetLinkInfo(id int, username string) Link {
 // 获取链接列表
 func GetLinks(username string) []Link {
 	var links []Link
-	//err = db.Preload("Category").Limit(pageSize).Offset((pageNum -1 ) * pageSize).Find(&links).Error
-	err = db.Preload("Favorite").Where("username = ?", username).Find(&links).Error
+	err = db.Where("username = ?", username).Find(&links).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil
 	}
@@ -75,8 +69,8 @@ func GetLinks(username string) []Link {
 func EditLink(id int, username string, data *Link) int {
 	var link Link
 
-	err = db.Model(&link).Where("id = ? and username = ?", id, username).Update("title", data.Title).Update("fid",
-		data.Fid).Update("content", data.Content).Update("img", data.Img).Error
+	err = db.Model(&link).Where("id = ? and username = ?", id, username).Update("title", data.Title).Update("favoritename",
+		data.Favoritename).Update("content", data.Content).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

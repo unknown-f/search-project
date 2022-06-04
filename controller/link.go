@@ -15,8 +15,9 @@ func AddLink(c *gin.Context) {
 	c.ShouldBindJSON(&data)
 	// 获取 username
 	username, _ := c.MustGet("username").(string)
+	data.Username = username
 	// 判断文章标题是否存在
-	code := repository.CheckLink(data.Title, username)
+	code := repository.CheckLink(data.Title, data.Username)
 	if code == errmsg.SUCCESS {
 		repository.CreateLink(&data)
 	}
@@ -32,11 +33,11 @@ func AddLink(c *gin.Context) {
 
 // 根据收藏夹获取链接
 func GetLinkByFavo(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	favoritename := c.Param("favoritename")
 
 	// 获取 username
 	username, _ := c.MustGet("username").(string)
-	data := repository.GetLinkByFavorite(id, username)
+	data := repository.GetLinkByFavorite(favoritename, username)
 	code := errmsg.SUCCESS
 
 	c.JSON(http.StatusOK, gin.H{
