@@ -155,7 +155,7 @@
 
             xhr.open("get", "/favo/favos");
             console.log(token);
-            xhr.setRequestHeader('Auth','Bearer '+token);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;
@@ -215,6 +215,9 @@
                 alert("请输入收藏夹名");
                 return;
             }
+
+            console.log(token);
+            xhr.setRequestHeader('Auth','Bearer '+token);
             xhr.open("post", "/favo/add");
             xhr.timeout = 2000;
             xhr.send('{"name":"'+favName+'"}')
