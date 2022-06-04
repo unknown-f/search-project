@@ -4,16 +4,22 @@
         var currPage;
         var pageSize = 3;
         var searchRes;
-        var collection;
+        var collectionList = {
+            "1":{
+                "sd":"jjjj","sdd":"jjjkk"
+            },
+            "第二个":{
+                "sd":"jkljkl","sdfsdfsf":"kljl"
+            }
+        };
+        var collection = "";
         
-
         function changePage(page){
             document.getElementById(currPage).setAttribute('class','');
             document.getElementById(page).setAttribute('class','active');
             currPage = page;
             flushSearch();
         }
-
         function flushSearch(){
             document.getElementById("content").innerHTML = "";
             for(i=0;i<pageSize;i++){
@@ -23,7 +29,6 @@
                 document.getElementById("content").innerHTML += searchRes[currPage*pageSize+i];
             }
         }
-
         function flushUser(){
             if(user == ""){
                 document.getElementById("usrName").innerText="未登录";
@@ -40,15 +45,31 @@
                 document.getElementById("register").onclick = dropUserName;
             }
         }
-
         function flushFav(){
             if(user==""){
                 document.getElementById("collection").style.display = "none";
                 return;
             }
             document.getElementById("collection").style.display = "block";
-        }
+            document.getElementById("collectionInner").innerHTML = "";
+            if(collection == ""){//查看收藏夹列表
+                for(let key in collectionList){
+                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="favNameQ+'+key+'" style="height:25px;width:350px;display:block;float:left;" onclick="goToFav(this.id)">'+key+'</a><input type="submit" id="favNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteFav(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                }
+                document.getElementById("collectionBack").style.display = "none";
+                document.getElementById("collectionBtn").onclick = addFav;
+                document.getElementById("collectionAddText").placeholder = "新的收藏夹名";
+            }
+            else{//查看某个收藏夹
+                for(let key in collectionList[collection]){
+                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="height:25px;width:350px;display:block;float:left;" onclick="goToLnk(this.id)">'+key+'</a><input type="submit" id="lnkNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                }
+                document.getElementById("collectionBack").style.display = "block";
+                document.getElementById("collectionBtn").onclick = addLnk;
+                document.getElementById("collectionAddText").placeholder = "收藏链接的序号";
+            }
 
+        }
         function dropUserName(){
             var xhr = new XMLHttpRequest();
 
@@ -68,7 +89,6 @@
             }
             document.getElementById("rightupBox").style.display="none";
         }
-
         function showRightUpBox(registerORlogin){
             if(registerORlogin == "login"){
                 document.getElementById("loginBtn").value="登录";
@@ -78,7 +98,6 @@
             }
             document.getElementById("rightupBox").style.display="block";
         }
-
         function getFav(){
             var xhr = new XMLHttpRequest();
 
@@ -95,11 +114,25 @@
                 }
             }
         }
-
+        function goToFav(favName){
+            collection = favName.slice(9);
+            flushFav();
+        }
+        function deleteFav(favName){
+            
+            console.log("delete",favName);
+        }
+        function favBack(){
+            collection = "";
+            flushFav();
+        }
         function addFav(){
             var xhr = new XMLHttpRequest();
             let favName = document.getElementById("collectionAddText").value;
-
+            if(favName == ""){
+                alert("请输入收藏夹名");
+                return;
+            }
             xhr.open("post", "/favo/add");
             xhr.timeout = 2000;
             xhr.send('{"name":"'+favName+'"}')
@@ -115,13 +148,16 @@
                 }
             }
         }
+        function addLnk(){
+            console.log("addLnk");
+        }
         function login(){
             var method = document.getElementById("loginBtn").value;
             var usrName = document.getElementById("inputUserName").value;
             var pwd = document.getElementById("inputPWD").value;
 
             if(usrName == ""){
-                alert("用户名不能为空");
+                alert("请输入用户名");
                 return;
             }
             if(usrName.includes("/")){
@@ -129,7 +165,7 @@
                 return;
             }
             if(pwd == ""){
-                alert("密码不能为空");
+                alert("请输入密码");
                 return;
             }
             if(pwd.includes("/")){
@@ -167,13 +203,11 @@
                 }
             }
         }
-
         function cancelLogin(){
             document.getElementById("inputUserName").value="";
             document.getElementById("inputPWD").value="";
             document.getElementById("rightupBox").style.display="none";
         }
-
         function updateMethod(theMethod){
             if(theMethod == "default"){
                 document.getElementById("input").innerText = "!!!!!!";
@@ -184,7 +218,6 @@
                 console.log("???");
             }
         }
-
         function searching(){
             time = "time";
             text = document.getElementById("input").value;
@@ -267,10 +300,18 @@
                 width: 50%;
                 float: right;
             }
+            #right{
+                border-left: 1px solid #000;
+                width: 450px;
+                height: 750px;
+                position: absolute;
+                top:150px;
+                right:15px;
+            }
             #tophot{
                 /* border: #ee3514; */
                 position: absolute;
-                top: 150;
+                top: 0;
                 right:15px;
                 width: 400;
                 height: 300;
@@ -278,16 +319,22 @@
             #collection{
                 /* border: 1px solid #2a14ee; */
                 position: absolute;
-                top: 500;
+                top: 350;
                 right:15px;
                 width: 400;
                 height: 400;
                 display: none;
             }
             #collectionHead{
-                width: 240;
+                width: 180;
                 color: blue;
                 /* font-size: 20; */
+            }
+            #collectionBack{
+                position: absolute;
+                top:0;
+                right: 160;
+                display: none;
             }
             #collectionBtn{
                 position: absolute;
@@ -356,17 +403,21 @@
 			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
 		</form>
         <hr>
-        <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;"></div>
-        <div id="collection">
-            <div>
-                <div id="collectionHead"><b>收藏夹列表</b></div>
-                <input id="collectionBtn" type="submit" value="添加" onclick="addFav()">
-                <input id="collectionAddText" type="input" value="" size="10">
+        <div id="right">
+            <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;"></div>
+            <div id="collection">
+                <div>
+                    <div id="collectionHead"><b>收藏夹列表</b></div>
+                    <input id="collectionBack" type="submit" value="后退" onclick="favBack()">
+                    <input id="collectionBtn" type="submit" value="添加" onclick="addFav()">
+                    <input id="collectionAddText" type="input" value="" placeholder="新的收藏夹名" size="10">
+                </div>
+                <hr style="background-color: #2a14ee;height: 1px; border: none;">
+                <hr style="background-color: #2a14ee;height: 1px; border: none;">
+                <div id="collectionInner" style="height: 350px;"></div>
             </div>
-            <hr style="background-color: #2a14ee;height: 1px; border: none;">
         </div>
 		<div id="content" style="height:800px"></div>
-
         <ul id="pagelist" class="pagination"></ul>
 
         <p></p>
