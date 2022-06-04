@@ -4,7 +4,7 @@
         var token = "";
         var currPage;
         var pageSize = 3;
-        var searchRes;
+        var searchRes = new Array();
         var collectionList = new Map();
         // {
         //     "收藏夹名":{
@@ -167,10 +167,6 @@
             var xhr = new XMLHttpRequest();
 
             xhr.open("get", "/favo/favos");
-<<<<<<< HEAD
-=======
-            console.log(token);
->>>>>>> 03d588f1d3eaa94f98ebb9f9543298b5e7bc186c
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
@@ -266,8 +262,9 @@
         }
         function addLnk(){
             var xhr = new XMLHttpRequest();
+            console.log(searchRes.length);
             let linkId = document.getElementById("collectionAddText").value;
-            if(Number(currPage*pageSize) + Number(linkId) > searchRes.length || linkId > pageSize){
+            if(linkId == "" || Number(currPage*pageSize) + Number(linkId) > searchRes.length || linkId > pageSize){
                 alert("请输入正确的序号");
                 return;
             }
