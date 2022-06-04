@@ -1,14 +1,15 @@
 package repository
 
 import (
-	"gorm.io/gorm"
 	"searchproject/utils/errmsg"
+
+	"gorm.io/gorm"
 )
 
 type Link struct {
 	gorm.Model
 	Title        string `gorm:"type:varchar(100);not null" json:"title"`
-	Content      string `gorm:"type:varchar(100)" json:"content"`
+	Content      string `gorm:"type:varchar(500)" json:"content"`
 	Username     string `gorm:"varchar(20);not null" json:"username"`
 	Favoritename string `gorm:"type:varchar(50);not null" json:"favoritename"`
 }
@@ -79,9 +80,9 @@ func EditLink(id int, username string, data *Link) int {
 }
 
 // 删除链接
-func DeleteLink(id int, username string) int {
+func DeleteLink(title string, username string) int {
 	var link Link
-	err = db.Where("id = ? and username = ?", id, username).Delete(&link).Error
+	err = db.Where("username = ? and title = ?", username, title).Delete(&link).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

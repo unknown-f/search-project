@@ -24,7 +24,7 @@ func InitRouter() error {
 	authUserRouter.Use(middleware.JwtToken())
 	{
 		authUserRouter.PUT("/:id", controller.EditUser)
-		authUserRouter.DELETE("/:id", controller.DeleteUser)
+		authUserRouter.DELETE("/:Username", controller.DeleteUser)
 	}
 
 	userRouter := r.Group("user")
@@ -55,7 +55,7 @@ func InitRouter() error {
 		authlinkRouter.GET("/info/:id", controller.GetLinkInfo)
 		authlinkRouter.GET("/links", controller.GetLinks)
 		authlinkRouter.PUT("/:id", controller.EditLink)
-		authlinkRouter.DELETE("/:id", controller.DeleteLink)
+		authlinkRouter.DELETE("/:title", controller.DeleteLink)
 	}
 
 	{

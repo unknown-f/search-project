@@ -68,9 +68,9 @@ func EditUser(id int, data *User) int {
 }
 
 // 删除用户
-func DeleteUser(id int) int {
+func DeleteUser(Username string) int {
 	var user User
-	err = db.Where("id = ?", id).Delete(&user).Error
+	err = db.Where("Username = ?", Username).Delete(&user).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

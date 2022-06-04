@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 添加链接
@@ -100,10 +101,10 @@ func EditLink(c *gin.Context) {
 
 // 删除链接
 func DeleteLink(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	title := c.Param("title")
 	// 获取 username
 	username, _ := c.MustGet("username").(string)
-	code := repository.DeleteLink(id, username)
+	code := repository.DeleteLink(title, username)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,

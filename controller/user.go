@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 查询用户名是否存在
@@ -68,8 +69,8 @@ func EditUser(c *gin.Context) {
 
 // 删除用户
 func DeleteUser(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	code := repository.DeleteUser(id)
+	Username := c.Param("Username")
+	code := repository.DeleteUser(Username)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
