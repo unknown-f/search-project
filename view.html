@@ -32,7 +32,14 @@
             }
             return targetText;
         }
-
+        function checkName(str){
+            for(let i=0; i<str.length; i++){
+                if(str[i] == '\\' || str[i] == '"' || str[i] == '/'){
+                    return 0;
+                }
+            }
+            return 1;
+        }
         function useAlert(errCode){
             switch(errCode){
                 case 1001:
@@ -121,7 +128,11 @@
                 if(currPage*pageSize+i>=searchRes.length){
                     break;
                 }
-                document.getElementById("content").innerHTML += "<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\"><img src=\""+searchRes[currPage*pageSize+i].ImgUrl+"\" alt=\"\"></p></a><br/><a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>";
+                let ele = '';
+                ele += '<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\">';
+                ele += '<img src=\"'+searchRes[currPage*pageSize+i].ImgUrl+'\" alt=\"\"></p></a><br/>';
+                ele += '<a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>';
+                document.getElementById("content").innerHTML += ele;
             }
         }
         function flushRelative(){
@@ -129,8 +140,12 @@
         }
         function flushHotList(){
             document.getElementById("hotContent").innerHTML = "";
-            for(let i=0; i<hotList.length; i++)
-                document.getElementById("hotContent").innerHTML += '<div style=\"height:30px;\"><a style=\"overflow:hidden; white-space:nowrap;text-overflow:ellipsis;width:400px;display:block;\" href=\"'+hotList[i].ImgUrl+'">'+hotList[i].Text+'</div>';
+            for(let i=0; i<hotList.length; i++){
+                let ele = '';
+                ele += '<div style=\"height:30px;\">';
+                ele += '<a style=\"overflow:hidden; white-space:nowrap;text-overflow:ellipsis;width:400px;display:block;\" href=\"'+hotList[i].ImgUrl+'">'+hotList[i].Text+'</div>';
+                document.getElementById("hotContent").innerHTML += ele;
+            }
         }
         function flushUser(){
             if(user == ""){
@@ -157,16 +172,27 @@
             document.getElementById("collectionInner").innerHTML = "";
             if(collection == ""){//查看收藏夹列表
                 for(let [key,value] of collectionList){
-                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="favNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" onclick="goToFav(this.id)">'+key+'</a><input type="submit" id="favNameD+'+key+'" value="删除" style="height:24px;" size="2" onclick="deleteFav(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                    let ele = '';
+                    ele += '<div style="height:30px;">';
+                    ele += '<a id="favNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:310px;display:block;float:left;" onclick="goToFav(this.id)">'+key+'</a>';
+                    ele += '<input type="submit" id="favNameU+'+key+'" value="更名" style="height:24px;" size="2" onclick="updateFav(this.id)">';
+                    ele += '<input type="submit" id="favNameD+'+key+'" value="删除" style="height:24px;float:right" size="2" onclick="deleteFav(this.id)">';
+                    ele += '</div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                    document.getElementById("collectionInner").innerHTML += ele;
                 }
                 document.getElementById("collectionBack").style.display = "none";
                 document.getElementById("collectionBtn").onclick = addFav;
-                document.getElementById("collectionAddText").placeholder = "新的收藏夹名";
+                document.getElementById("collectionAddText").placeholder = "收藏夹名";
             }
             else{//查看某个收藏夹
                 let theMap = collectionList.get(collection);
                 for(let [key,value] of theMap){
-                    document.getElementById("collectionInner").innerHTML += '<div style="height:30px;"><a id="lnkNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" target=\"_blank\" href="'+value+'">'+key+'</a><input type="submit" id="lnkNameD+'+translateM(key,"html")+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)"></div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                    let ele = '';
+                    ele += '<div style="height:30px;">';
+                    ele += '<a id="lnkNameQ+'+key+'" style="overflow:hidden; white-space:nowrap;text-overflow:ellipsis;height:25px;width:350px;display:block;float:left;" target=\"_blank\" href="'+value+'">'+key+'</a>';
+                    ele += '<input type="submit" id="lnkNameD+'+translateM(key,"html")+'" value="删除" style="height:24px;" size="2" onclick="deleteLnk(this.id)">';
+                    ele += '</div><hr style="background-color: #2a14ee;height: 1px; border: none;">';
+                    document.getElementById("collectionInner").innerHTML += ele;
                 }
                 document.getElementById("collectionBack").style.display = "block";
                 document.getElementById("collectionBtn").onclick = addLnk;
@@ -222,6 +248,7 @@
                                 getLnk(obj.data[key].name);
                             }
                             setTimeout(() => {
+                                console.log(collectionList);
                                 flushFav();
                             }, 100);
                         }
@@ -235,6 +262,40 @@
         function goToFav(favName){
             collection = favName.slice(9);
             flushFav();
+        }
+        function updateFav(favName){
+            var xhr = new XMLHttpRequest();
+            favName = favName.slice(9);
+            newName = document.getElementById("collectionAddText").value;
+            if(newName == ""){
+                alert("请在上方文本框填写新的名称");
+                return;
+            }
+            if(!checkName(newName)){
+                alert("名称不能能包含'/','\\','\"'等特殊字符");
+                return;
+            }
+            xhr.open("put", "/favo/"+favName);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
+            xhr.timeout = 2000;
+            xhr.send('{"name":"'+newName+'"}');
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj.status == 200){
+                            document.getElementById("collectionAddText").value = "";
+                            getFav();
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
         }
         function deleteFav(favName){
             var xhr = new XMLHttpRequest();
@@ -272,7 +333,10 @@
                 alert("请输入收藏夹名");
                 return;
             }
-
+            if(!checkName(favName)){
+                alert("名称不能能包含'/','\\','\"'等特殊字符");
+                return;
+            }
             xhr.open("post", "/favo/add");
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
@@ -392,16 +456,16 @@
                 alert("请输入用户名");
                 return;
             }
-            if(usrName.includes("/")){
-                alert("用户名不能含有'/'");
+            if(!checkName(usrName)){
+                alert("用户名不能能包含'/','\\','\"'等特殊字符");
                 return;
             }
             if(pwd == ""){
                 alert("请输入密码");
                 return;
             }
-            if(pwd.includes("/")){
-                alert("密码不能含有'/'");
+            if(!checkName(pwd)){
+                alert("密码不能能包含'/','\\','\"'等特殊字符");
                 return;
             }
 
