@@ -38,7 +38,7 @@ func CreateFavorite(data *Favorite) int {
 func GetFavorites(username string) []Favorite {
 	var favos []Favorite
 	//err = db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cates).Error
-	err = db.Where("username = ?", username).Find(&favos).Error
+	err := db.Where("username = ?", username).Find(&favos).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil
 	}
@@ -54,7 +54,7 @@ func EditFavorite(oldname string, username string, data *Favorite) int {
 		fmt.Printf("未找到目标Favorite\n")
 		return errmsg.ERROR
 	}
-	err = db.Model(&favo).Where("id = ?", favo.ID).Update("name", data.Name).Error
+	err := db.Model(&favo).Where("id = ?", favo.ID).Update("name", data.Name).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -64,7 +64,7 @@ func EditFavorite(oldname string, username string, data *Favorite) int {
 // 删除收藏夹
 func DeleteFavorite(name string, username string) int {
 	var favo Favorite
-	err = db.Where("name = ? and username = ?", name, username).Delete(&favo).Error
+	err := db.Where("name = ? and username = ?", name, username).Delete(&favo).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
