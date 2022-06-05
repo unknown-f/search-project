@@ -42,7 +42,7 @@ func InitRouter() error {
 		// favorite模块路由
 		authFavoRouter.POST("/add", controller.AddFavorite)
 		authFavoRouter.GET("/favos", controller.GetFavorites)
-		authFavoRouter.PUT("/:oldname", controller.EditFavorite)
+		authFavoRouter.PUT("/:id", controller.EditFavorite)
 		authFavoRouter.DELETE("/:name", controller.DeleteFavorite)
 	}
 
@@ -50,11 +50,9 @@ func InitRouter() error {
 	authlinkRouter.Use(middleware.JwtToken())
 	{
 		// link 模块路由
-		authlinkRouter.POST("/add", controller.AddLink)
-		authlinkRouter.GET("/list/:favoritename", controller.GetLinkByFavo)
-		authlinkRouter.GET("/info/:id", controller.GetLinkInfo)
+		authlinkRouter.POST("/add/:favoriteid", controller.AddLink)
+		authlinkRouter.GET("/list/:favoriteid", controller.GetLinkByFavo)
 		authlinkRouter.GET("/links", controller.GetLinks)
-		authlinkRouter.PUT("/:id", controller.EditLink)
 		authlinkRouter.DELETE("/:title", controller.DeleteLink)
 	}
 

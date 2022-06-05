@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
@@ -14,11 +15,14 @@ func AddLink(c *gin.Context) {
 	var data repository.Link
 	// 绑定数据模型
 	c.ShouldBindJSON(&data)
+	favoriteid, _ := strconv.Atoi(c.Param("favoriteid"))
 	// 获取 username
 	username, _ := c.MustGet("username").(string)
+	data.Favoriteid = favoriteid
 	data.Username = username
 	// 判断文章标题是否存在
-	code := repository.CheckLink(data.Title, data.Username)
+	code := repository.CheckLink(data.Favoriteid, data.Title)
+	fmt.Println("?????", data)
 	if code == errmsg.SUCCESS {
 		repository.CreateLink(&data)
 	}
@@ -34,26 +38,8 @@ func AddLink(c *gin.Context) {
 
 // 根据收藏夹获取链接
 func GetLinkByFavo(c *gin.Context) {
-	favoritename := c.Param("favoritename")
-
-	// 获取 username
-	username, _ := c.MustGet("username").(string)
-	data := repository.GetLinkByFavorite(favoritename, username)
-	code := errmsg.SUCCESS
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
-}
-
-// 查询单个链接
-func GetLinkInfo(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	// 获取 username
-	username, _ := c.MustGet("username").(string)
-	data := repository.GetLinkInfo(id, username)
+	id, _ := strconv.Atoi(c.Param("favoriteid"))
+	data := repository.GetLinkByFavorite(id)
 	code := errmsg.SUCCESS
 
 	c.JSON(http.StatusOK, gin.H{
@@ -69,28 +55,6 @@ func GetLinks(c *gin.Context) {
 	username, _ := c.MustGet("username").(string)
 	data := repository.GetLinks(username)
 	code := errmsg.SUCCESS
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
-}
-
-// 编辑链接
-func EditLink(c *gin.Context) {
-	var data repository.Link
-	id, _ := strconv.Atoi(c.Param("id"))
-	// 获取 username
-	username, _ := c.MustGet("username").(string)
-	c.ShouldBindJSON(&data)
-	code := repository.CheckLink(data.Title, username)
-	if code == errmsg.SUCCESS {
-		repository.EditLink(id, username, &data)
-	}
-	if code == errmsg.ERROR_LINKNAME_USED {
-		c.Abort()
-	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,

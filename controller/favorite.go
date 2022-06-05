@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,12 +46,12 @@ func GetFavorites(c *gin.Context) {
 // 编辑收藏夹
 func EditFavorite(c *gin.Context) {
 	var data repository.Favorite
-	oldname := c.Param("oldname")
+	id, _ := strconv.Atoi(c.Param("id"))
 	c.ShouldBindJSON(&data)
 	username, _ := c.MustGet("username").(string)
 	code := repository.CheckFavorite(data.Name, username)
 	if code == errmsg.SUCCESS {
-		repository.EditFavorite(oldname, username, &data)
+		repository.EditFavorite(id, username, &data)
 	}
 	if code == errmsg.ERROR_FAVORITENAME_USED {
 		c.Abort()

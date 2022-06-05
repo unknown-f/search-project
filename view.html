@@ -371,10 +371,10 @@
             let link = searchRes[Number(currPage*pageSize) + Number(linkId)-1];
             let tmpText = translateM(link.Text,"normal");
 
-            xhr.open("post", "/link/add");
+            xhr.open("post", "/link/add/"+collectionIdMap.get(collection));
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
-            xhr.send('{"title":"'+tmpText+'","favoritename":"'+collection+'","content":"'+link.ImgUrl+'"}')
+            xhr.send('{"title":"'+tmpText+'","content":"'+link.ImgUrl+'"}')
             xhr.onreadystatechange=state_Change;
             function state_Change(){
                 if (this.readyState==4){// 4 = "loaded"
@@ -394,7 +394,7 @@
         }
         function getLnk(favName){
             var xhr = new XMLHttpRequest();
-            xhr.open("get", "/link/list/"+favName);
+            xhr.open("get", "/link/list/"+collectionIdMap.get(favName));
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send(null)
@@ -407,7 +407,7 @@
                         let obj = JSON.parse(ret);
                         if(obj.status == 200){
                             for(let data of obj.data){
-                                collectionList.get(data.favoritename).set(data.title,data.content);
+                                collectionList.get(favName).set(data.title,data.content);
                             }
                         }
                         else{
@@ -445,6 +445,8 @@
             let method = document.getElementById("loginBtn").value;
             if(method == "退出"){
                 user = "";
+                collection = "";
+                document.getElementById("collectionAddText").value = "";
                 document.getElementById("rightupBox").style.display="none";
                 flushUser();
                 getFav();

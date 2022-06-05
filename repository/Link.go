@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"searchproject/utils/errmsg"
 
 	"gorm.io/gorm"
@@ -8,17 +9,18 @@ import (
 
 type Link struct {
 	gorm.Model
-	Title        string `gorm:"type:varchar(100);not null" json:"title"`
-	Content      string `gorm:"type:varchar(500)" json:"content"`
-	Username     string `gorm:"varchar(20);not null" json:"username"`
-	Favoritename string `gorm:"type:varchar(50);not null" json:"favoritename"`
+	Favoriteid int    `gorm:"type:int" json:"favoriteid"`
+	Title      string `gorm:"type:varchar(100);not null" json:"title"`
+	Content    string `gorm:"type:varchar(500)" json:"content"`
+	Username   string `gorm:"varchar(20);not null" json:"username"`
+	// Favoritename string `gorm:"type:varchar(50);not null" json:"favoritename"`
 }
 
 // 查询链接是否存在
-func CheckLink(title string, username string) int {
+func CheckLink(favoriteid int, title string) int {
 	var link Link
 	link.ID = 0
-	db.Select("id").Where("title = ? and username = ?", title, username).First(&link)
+	db.Select("id").Where("favoriteid = ? and title = ?", favoriteid, title).First(&link)
 	if link.ID > 0 {
 		return errmsg.ERROR_LINKNAME_USED
 	}
@@ -27,6 +29,7 @@ func CheckLink(title string, username string) int {
 
 // 创建链接
 func CreateLink(data *Link) int {
+	fmt.Println("dataaaaaa", data)
 	err := db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR
@@ -35,9 +38,9 @@ func CreateLink(data *Link) int {
 }
 
 // 根据收藏夹获取链接
-func GetLinkByFavorite(favoritename string, username string) []Link {
+func GetLinkByFavorite(id int) []Link {
 	var linkByFavo []Link
-	err := db.Where("favoritename = ? and username = ?", favoritename, username).Find(&linkByFavo).Error
+	err := db.Where("favoriteid = ?", id).Find(&linkByFavo).Error
 
 	if err != nil {
 		return nil
@@ -64,19 +67,6 @@ func GetLinks(username string) []Link {
 		return nil
 	}
 	return links
-}
-
-// 编辑链接
-func EditLink(id int, username string, data *Link) int {
-	var link Link
-
-	err := db.Model(&link).Where("id = ? and username = ?", id, username).Update("title", data.Title).Update("favoritename",
-		data.Favoritename).Update("content", data.Content).Error
-	if err != nil {
-		return errmsg.ERROR
-	}
-	return errmsg.SUCCESS
-
 }
 
 // 删除链接

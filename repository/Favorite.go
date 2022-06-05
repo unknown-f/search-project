@@ -46,15 +46,10 @@ func GetFavorites(username string) []Favorite {
 }
 
 // 编辑收藏夹信息
-func EditFavorite(oldname string, username string, data *Favorite) int {
+func EditFavorite(id int, username string, data *Favorite) int {
 	var favo Favorite
-	favo.ID = 0
-	db.Select("id").Where("name = ? and username = ?", oldname, username).First(&favo)
-	if favo.ID == 0 {
-		fmt.Printf("未找到目标Favorite\n")
-		return errmsg.ERROR
-	}
-	err := db.Model(&favo).Where("id = ?", favo.ID).Update("name", data.Name).Error
+
+	err := db.Model(&favo).Where("id = ? and username = ?", id, username).Update("name", data.Name).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
