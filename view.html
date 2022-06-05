@@ -8,6 +8,7 @@
         var hotWord = "凌XSCANF";
         var hotList = new Array();
         var collectionList = new Map();
+        var collectionIdMap = new Map();
         var collection = "";
 
         function translateM(oriText,method){
@@ -143,7 +144,7 @@
             for(let i=0; i<hotList.length; i++){
                 let ele = '';
                 ele += '<div style=\"height:30px;\">';
-                ele += '<a style=\"overflow:hidden; white-space:nowrap;text-overflow:ellipsis;width:400px;display:block;\" href=\"'+hotList[i].ImgUrl+'">'+hotList[i].Text+'</div>';
+                ele += '<a style=\"overflow:hidden; white-space:nowrap;text-overflow:ellipsis;width:400px;display:block;\" target=\"_blank\" href=\"'+hotList[i].ImgUrl+'">'+hotList[i].Text+'</div>';
                 document.getElementById("hotContent").innerHTML += ele;
             }
         }
@@ -243,12 +244,13 @@
                         let obj = JSON.parse(ret);
                         if(obj.status == 200){
                             collectionList = new Map();
+                            collectionIdMap = new Map();
                             for(let key in obj.data){
                                 collectionList.set(obj.data[key].name,new Map());
+                                collectionIdMap.set(obj.data[key].name,obj.data[key].id)
                                 getLnk(obj.data[key].name);
                             }
                             setTimeout(() => {
-                                console.log(collectionList);
                                 flushFav();
                             }, 100);
                         }
@@ -275,7 +277,7 @@
                 alert("名称不能能包含'/','\\','\"'等特殊字符");
                 return;
             }
-            xhr.open("put", "/favo/"+favName);
+            xhr.open("put", "/favo/"+collectionIdMap.get(favName));
             xhr.setRequestHeader('Authorization','Bearer '+token);
             xhr.timeout = 2000;
             xhr.send('{"name":"'+newName+'"}');
@@ -491,6 +493,8 @@
                             if(method == "登录"){
                                 user = usrName;
                                 token = obj.token;
+                                collectionList = new Map();
+                                collectionIdMap = new Map();
                                 getFav();
                             }
                             cancelLogin();
