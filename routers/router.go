@@ -64,7 +64,7 @@ func InitRouter() error {
 		searchRouter.GET("/hotdoc/:num", controller.SearchTopNDoc)
 		searchRouter.GET("/hotkeyword/:num", controller.SearchTopNKeyword)
 		searchRouter.GET("/:time/:text", controller.Search)
-		searchRouter.POST("/doc", controller.AddFavorite)
+		searchRouter.POST("/doc", controller.AddNewTextDoc)
 	}
 
 	{

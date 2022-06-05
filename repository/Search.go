@@ -8,13 +8,14 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
-
 	"github.com/yanyiwu/gojieba"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var Jbfc *gojieba.Jieba
+var mgomutex sync.Mutex
 
 type Doc struct {
 	ID     int    `json:"ID" bson:"ID"`
@@ -216,10 +217,10 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 	}
 
 }
-
-func CutAndWriteOnce(doctext string) error {
+func CutAndWriteOnce(doctext string) error {	
+	mgomutex.Lock()
 	newdoc := Doc{
-		ID:     latestDocid,
+		ID:     latestDocid+1,
 		ImgUrl: "",
 		Text:   doctext,
 	}
@@ -229,11 +230,12 @@ func CutAndWriteOnce(doctext string) error {
 	}
 	words := CutWords(doctext, Jbfc)
 	for _, value := range words {
-		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
+		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid+1}})
 		if err != nil {
 			return err
 		}
 	}
 	latestDocid += 1
+	mgomutex.Unlock()
 	return nil
 }

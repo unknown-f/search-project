@@ -58,7 +58,7 @@ func InitMongodb() error {
 	c_indextodoc = mgodb.C("indextosource")
 	c_keytoindx = mgodb.C("keytoindex")
 	var lastestdoc Doc
-	err = c_indextodoc.Find(nil).Sort("ID").One(&lastestdoc)
+	err = c_indextodoc.Find(nil).Sort("-ID").One(&lastestdoc)
 	if err != nil {
 		return err
 	}
