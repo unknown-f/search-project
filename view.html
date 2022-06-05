@@ -449,7 +449,7 @@
             var xhr = new XMLHttpRequest();
 
             // 每次需要发请求需要做两步：
-            xhr.open("get", "http://localhost:8080/"+time+"/"+text, true);
+            xhr.open("get", "search/"+time+"/"+text, true);
             xhr.timeout = 2000;
             xhr.send(null)
             xhr.onreadystatechange=state_Change;

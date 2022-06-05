@@ -58,13 +58,18 @@ func InitRouter() error {
 		authlinkRouter.DELETE("/:title", controller.DeleteLink)
 	}
 
+	searchRouter := r.Group("search")
+	{
+		//search 搜索路由
+		searchRouter.POST("/hotdoc", controller.SearchTopNDoc)
+		searchRouter.POST("/hotkeyword", controller.SearchTopNKeyword)
+		searchRouter.GET("/:time/:text", controller.Search)
+	}
+
 	{
 		r.GET("/", func(c *gin.Context) {
 			c.HTML(200, "view.html", nil)
 		})
-		r.POST("/hotdoc", controller.SearchTopNDoc)
-		r.POST("/hotkeyword", controller.SearchTopNKeyword)
-		r.GET("/:time/:text", controller.Search)
 	}
 	err := r.Run()
 	if err != nil {
