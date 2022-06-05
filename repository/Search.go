@@ -64,7 +64,7 @@ func InitJieba() {
 func SearchTopNDoc(NDoc int64) []Doc {
 	var docrlt []Doc
 	hotdoc, _ := redisdb.ZRevRangeWithScores("hotdoc", 0, NDoc).Result()
-	fmt.Println(hotdoc)
+	fmt.Println("hotdoc", hotdoc)
 	for _, docid := range hotdoc {
 		docidint, _ := strconv.Atoi(docid.Member.(string))
 		docrlt = append(docrlt, SearchOneRltToDoc(docidint))
@@ -75,7 +75,7 @@ func SearchTopNDoc(NDoc int64) []Doc {
 func SearchTopNKeyword(NWord int64) []string {
 	var hotkeywords []string
 	hotkeyword, _ := redisdb.ZRevRangeWithScores("hotkeyword", 0, NWord).Result()
-	fmt.Println(hotkeyword)
+	fmt.Println("hotkeyword", hotkeyword)
 	for _, docid := range hotkeyword {
 		hotkeywords = append(hotkeywords, docid.Member.(string))
 	}

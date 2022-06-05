@@ -3,20 +3,10 @@
         var user = "";
         var token = "";
         var currPage = 0;
-        var pageSize = 3;
+        var pageSize = 5;
         var searchRes = new Array();
+        var hotWord = "蜀汉英雄传";
         var collectionList = new Map();
-        // {
-        //     "收藏夹名":{
-        //         "链接1的文本":"链接1的url","链接2的文本":"链接2的url"
-        //     },
-        //     "1":{
-        //         "sd":"jjjj","sdd":"jjjkk"
-        //     },
-        //     "第二个":{
-        //         "sd":"jkljkl","sdfsdfsf":"kljl"
-        //     }
-        // };
         var collection = "";
 
         function translateM(oriText,method){
@@ -73,6 +63,39 @@
                     break;
             }
         }
+        function searchHot(){
+            searchHotWord();
+            searchHotDocx();
+        }
+
+        function searchHotWord(){
+            var xhr = new XMLHttpRequest();
+            xhr.open("post", "/search/hotkeyword");
+            xhr.timeout = 2000;
+            xhr.send("num=1");
+            console.log(xhr);
+            // xhr.onreadystatechange=state_Change;
+
+            // function state_Change(){
+            //     if (this.readyState==4){// 4 = "loaded"
+            //         if (this.status==200){// 200 = "OK"
+            //             let ret = xhr.responseText;
+            //             let obj = JSON.parse(ret);
+            //             if(obj.status == 200){
+            //                 hotWord = "???";
+            //                 document.getElementById("input").placeholder = hotWord;
+            //             }
+            //             else{
+            //                 useAlert(obj.status);
+            //             }
+            //         }
+            //     }
+            // }
+        }
+
+        function searchHotDocx(){
+            // document.getElementById()
+        }
         function changePage(page){
             document.getElementById(currPage).setAttribute('class','');
             document.getElementById(page).setAttribute('class','active');
@@ -85,7 +108,7 @@
                 if(currPage*pageSize+i>=searchRes.length){
                     break;
                 }
-                document.getElementById("content").innerHTML += "<a target=\"_blank\"href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"<br/>";
+                document.getElementById("content").innerHTML += "<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\"><img src=\""+searchRes[currPage*pageSize+i].ImgUrl+"\" alt=\"\"></p></a><br/><a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>";
             }
         }
         function flushUser(){
@@ -129,36 +152,6 @@
                 document.getElementById("collectionAddText").placeholder = "收藏链接的序号";
             }
 
-        }
-        function dropUserName(){
-            var xhr = new XMLHttpRequest();
-
-            xhr.open("delete", "/user/"+user);
-            xhr.setRequestHeader('Authorization','Bearer '+token);
-            xhr.timeout = 2000;
-            xhr.send(null)
-            xhr.onreadystatechange=state_Change;
-
-            function state_Change(){
-                if (this.readyState==4){// 4 = "loaded"
-                    if (this.status==200){// 200 = "OK"
-                        let ret = xhr.responseText;
-                        let obj = JSON.parse(ret);
-                        if(obj.status == 200){
-                            user = "";
-                            token = "";
-                            flushUser();
-                            getFav();
-                        }
-                        else{
-                            useAlert(obj.status);
-                        }
-                    }
-                }
-            }
-            document.getElementById("inputUserName").value="";
-            document.getElementById("inputPWD").value="";
-            document.getElementById("rightupBox").style.display="none";
         }
         function loginOrQuit(){
             if(user!=""){
@@ -284,12 +277,12 @@
         function addLnk(){
             var xhr = new XMLHttpRequest();
             let linkId = document.getElementById("collectionAddText").value;
-            if(linkId == "" || Number(currPage*pageSize)+Number(linkId) > Number(searchRes.length) || linkId > pageSize){
+            if(linkId == "" || linkId == '0' || isNaN(linkId) || Number(currPage*pageSize)+Number(linkId) > Number(searchRes.length) || linkId > pageSize){
                 alert("请输入正确的序号");
                 return;
             }
             let link = searchRes[Number(currPage*pageSize) + Number(linkId)-1];
-            let tmpText = translate(link.Text,"normal");
+            let tmpText = translateM(link.Text,"normal");
 
             xhr.open("post", "/link/add");
             xhr.setRequestHeader('Authorization','Bearer '+token);
@@ -428,6 +421,36 @@
                 }
             }
         }
+        function dropUserName(){
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("delete", "/user/"+user);
+            xhr.setRequestHeader('Authorization','Bearer '+token);
+            xhr.timeout = 2000;
+            xhr.send(null)
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj.status == 200){
+                            user = "";
+                            token = "";
+                            flushUser();
+                            getFav();
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
+            document.getElementById("inputUserName").value="";
+            document.getElementById("inputPWD").value="";
+            document.getElementById("rightupBox").style.display="none";
+        }
         function cancelLogin(){
             document.getElementById("inputUserName").value="";
             document.getElementById("inputPWD").value="";
@@ -446,6 +469,9 @@
         function searching(){
             time = "time";
             text = document.getElementById("input").value;
+            if(text == ""){
+                text = hotWord;
+            }
             var xhr = new XMLHttpRequest();
 
             // 每次需要发请求需要做两步：
@@ -462,10 +488,15 @@
 
                         var i;
                         var idx = obj.ReturnRes;
+                        if(idx == null){
+                            alert("没有查到相关结果");
+                            return;
+                        }
                         searchRes = new Array(idx.length)
                         for (var i=0;i<idx.length;i++){
                             searchRes[i] = idx[i];
                         }
+                        //添加页码
                         document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
                         for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
                             document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
@@ -572,6 +603,22 @@
                 right: 5;
                 display: block;
             }
+
+            .cropP {
+                float: left;
+                position: relative;/*this is important*/
+                margin: 0.5em 10px 0.5em 0;
+                border: 1px solid #ccc;
+                width: 100px;
+                height: 80px;
+            }
+
+            .cropP img {
+                margin: 0;
+                position: absolute;
+                width: 100px;
+                height: 80px;
+            }
             ul.pagination {
                 display: inline-block;
                 padding: 0;
@@ -601,7 +648,7 @@
         </style>
 	</head>
 
-	<body>
+	<body onload="searchHot()">
         <div id="rightup">
             <div id="usrName"><a >未登录</a><br></div>
             <div id="api">
@@ -620,7 +667,7 @@
         <br>
 
 		<input id="input" type="text" name="target" size="40">
-		<input type="submit" value="搜索" size="40" onclick="searching()">
+		<input id="inputBtn" type="submit" value="搜索" size="40" onclick="searching()">
 
 
 		<form id="selectMethod">
@@ -642,8 +689,9 @@
                 <div id="collectionInner" style="height: 350px;"></div>
             </div>
         </div>
-		<div id="content" style="width:700px; height:800px"></div>
-        <ul id="pagelist" class="pagination"></ul>
+		<div id="content" style="width: 550px; height:600px"></div>
+        <div id="relation" style="width: 550px; height:180px"></div>
+        <ul id="pagelist" class="pagination" style="height: 30px;"></ul>
 
         <p></p>
 		
