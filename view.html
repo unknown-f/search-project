@@ -5,7 +5,7 @@
         var currPage = 0;
         var pageSize = 5;
         var searchRes = new Array();
-        var hotWord = "蜀汉英雄传";
+        var hotWord = "凌XSCANF";
         var collectionList = new Map();
         var collection = "";
 
@@ -67,33 +67,47 @@
             searchHotWord();
             searchHotDocx();
         }
-
         function searchHotWord(){
             var xhr = new XMLHttpRequest();
-            xhr.open("post", "/search/hotkeyword");
+            xhr.open("get", "/search/hotkeyword/1");
             xhr.timeout = 2000;
-            xhr.send("num=1");
-            console.log(xhr);
-            // xhr.onreadystatechange=state_Change;
+            xhr.send(null);
+            xhr.onreadystatechange=state_Change;
 
-            // function state_Change(){
-            //     if (this.readyState==4){// 4 = "loaded"
-            //         if (this.status==200){// 200 = "OK"
-            //             let ret = xhr.responseText;
-            //             let obj = JSON.parse(ret);
-            //             if(obj.status == 200){
-            //                 hotWord = "???";
-            //                 document.getElementById("input").placeholder = hotWord;
-            //             }
-            //             else{
-            //                 useAlert(obj.status);
-            //             }
-            //         }
-            //     }
-            // }
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj != null)
+                            hotWord = obj[0];
+                    
+                    }
+                }
+                document.getElementById("input").placeholder = hotWord;
+            }
         }
-
         function searchHotDocx(){
+            var xhr = new XMLHttpRequest();
+            xhr.open("get", "/search/hotdoc/5");
+            xhr.timeout = 2000;
+            xhr.send(null);
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        let ret = xhr.responseText;
+                        let obj = JSON.parse(ret);
+                        if(obj.status == 200){
+                            console.log("!!!!");
+                        }
+                        else{
+                            useAlert(obj.status);
+                        }
+                    }
+                }
+            }
             // document.getElementById()
         }
         function changePage(page){
@@ -110,6 +124,9 @@
                 }
                 document.getElementById("content").innerHTML += "<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\"><img src=\""+searchRes[currPage*pageSize+i].ImgUrl+"\" alt=\"\"></p></a><br/><a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>";
             }
+        }
+        function flushRelative(){
+
         }
         function flushUser(){
             if(user == ""){
@@ -503,6 +520,7 @@
                         }
                         currPage = 0;
                         flushSearch();
+                        flushRelative();
                     }
                     else{
                         alert("Problem retrieving XML data:" + this.status);
@@ -696,7 +714,7 @@
         <p></p>
 		
         <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
-		版权 © 队名
+		创作团队@凌XSCANF
         </div>
 	</body>
 </html>

@@ -22,7 +22,7 @@ func Search(c *gin.Context) {
 }
 
 func SearchTopNDoc(c *gin.Context) {
-	num, err := strconv.ParseInt(c.PostForm("num"), 10, 64)
+	num, err := strconv.ParseInt(c.Param("num"), 10, 64)
 	if err != nil {
 		c.JSON(406, "请求的数量不是整数")
 	} else {
@@ -31,7 +31,7 @@ func SearchTopNDoc(c *gin.Context) {
 }
 
 func SearchTopNKeyword(c *gin.Context) {
-	num, err := strconv.ParseInt(c.PostForm("num"), 10, 64)
+	num, err := strconv.ParseInt(c.Param("num"), 10, 64)
 	if err != nil {
 		c.JSON(406, "请求的数量不是整数")
 	} else {

@@ -61,8 +61,8 @@ func InitRouter() error {
 	searchRouter := r.Group("search")
 	{
 		//search 搜索路由
-		searchRouter.POST("/hotdoc", controller.SearchTopNDoc)
-		searchRouter.POST("/hotkeyword", controller.SearchTopNKeyword)
+		searchRouter.GET("/hotdoc/:num", controller.SearchTopNDoc)
+		searchRouter.GET("/hotkeyword/:num", controller.SearchTopNKeyword)
 		searchRouter.GET("/:time/:text", controller.Search)
 	}
 
