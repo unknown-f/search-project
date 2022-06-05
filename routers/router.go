@@ -31,9 +31,9 @@ func InitRouter() error {
 	{
 		// user模块路由
 		userRouter.POST("/add", controller.AddUser)
-		userRouter.GET("users", controller.GetUsers)
+		userRouter.GET("/users", controller.GetUsers)
 
-		userRouter.POST("login", controller.Login)
+		userRouter.POST("/login", controller.Login)
 	}
 
 	authFavoRouter := r.Group("favo")
@@ -41,8 +41,8 @@ func InitRouter() error {
 	{
 		// favorite模块路由
 		authFavoRouter.POST("/add", controller.AddFavorite)
-		authFavoRouter.GET("favos", controller.GetFavorites)
-		authFavoRouter.PUT("/:id", controller.EditFavorite)
+		authFavoRouter.GET("/favos", controller.GetFavorites)
+		authFavoRouter.PUT("/:oldname", controller.EditFavorite)
 		authFavoRouter.DELETE("/:name", controller.DeleteFavorite)
 	}
 
@@ -64,7 +64,6 @@ func InitRouter() error {
 		searchRouter.GET("/hotdoc/:num", controller.SearchTopNDoc)
 		searchRouter.GET("/hotkeyword/:num", controller.SearchTopNKeyword)
 		searchRouter.GET("/:time/:text", controller.Search)
-		searchRouter.POST("/doc", controller.AddNewTextDoc)
 	}
 
 	{

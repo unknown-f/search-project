@@ -124,14 +124,14 @@
         }
         function flushSearch(){
             document.getElementById("content").innerHTML = "";
-            for(i=0;i<pageSize;i++){
+            for(let i=0;i<pageSize;i++){
                 if(currPage*pageSize+i>=searchRes.length){
                     break;
                 }
                 let ele = '';
-                ele += '<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\">';
-                ele += '<img src=\"'+searchRes[currPage*pageSize+i].ImgUrl+'\" alt=\"\"></p></a><br/>';
-                ele += '<a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>';
+                ele += "<div style=\"height:110px;\"><a target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+" class=\"thumbnail\"><p class=\"cropP\">";
+                ele += "<img src=\""+ searchRes[currPage*pageSize+i].ImgUrl +"\" alt=\"\"></p></a><br/>";
+                ele += "<a  style=\"height:95px;display:block;\" target=\"_blank\" href="+searchRes[currPage*pageSize+i].ImgUrl+">"+searchRes[currPage*pageSize+i].Text+"</div>";
                 document.getElementById("content").innerHTML += ele;
             }
         }
