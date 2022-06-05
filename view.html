@@ -6,6 +6,7 @@
         var pageSize = 5;
         var searchRes = new Array();
         var hotWord = "凌XSCANF";
+        var hotList = new Array();
         var collectionList = new Map();
         var collection = "";
 
@@ -69,7 +70,7 @@
         }
         function searchHotWord(){
             var xhr = new XMLHttpRequest();
-            xhr.open("get", "/search/hotkeyword/1");
+            xhr.open("get", "/search/hotkeyword/0");
             xhr.timeout = 2000;
             xhr.send(null);
             xhr.onreadystatechange=state_Change;
@@ -89,7 +90,7 @@
         }
         function searchHotDocx(){
             var xhr = new XMLHttpRequest();
-            xhr.open("get", "/search/hotdoc/5");
+            xhr.open("get", "/search/hotdoc/8");
             xhr.timeout = 2000;
             xhr.send(null);
             xhr.onreadystatechange=state_Change;
@@ -99,16 +100,14 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        if(obj.status == 200){
-                            console.log("!!!!");
+                        hotList = new Array(obj.length);
+                        for(let i=0;i<obj.length;i++){
+                            hotList[i] = obj[i];
                         }
-                        else{
-                            useAlert(obj.status);
-                        }
+                        flushHotList();
                     }
                 }
             }
-            // document.getElementById()
         }
         function changePage(page){
             document.getElementById(currPage).setAttribute('class','');
@@ -127,6 +126,11 @@
         }
         function flushRelative(){
 
+        }
+        function flushHotList(){
+            document.getElementById("hotContent").innerHTML = "";
+            for(let i=0; i<hotList.length; i++)
+                document.getElementById("hotContent").innerHTML += '<div style=\"height:30px;\"><a style=\"overflow:hidden; white-space:nowrap;text-overflow:ellipsis;width:400px;display:block;\" href=\"'+hotList[i].ImgUrl+'">'+hotList[i].Text+'</div>';
         }
         function flushUser(){
             if(user == ""){
@@ -694,7 +698,9 @@
 		</form>
         <hr>
         <div id="right">
-            <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;"></div>
+            <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;">
+                <div id="hotContent" style="height: 270;"></div>
+            </div>
             <div id="collection">
                 <div>
                     <div id="collectionHead"><b>收藏夹列表</b></div>

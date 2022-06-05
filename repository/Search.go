@@ -67,6 +67,9 @@ func SearchTopNDoc(NDoc int64) []Doc {
 	fmt.Println("hotdoc", hotdoc)
 	for _, docid := range hotdoc {
 		docidint, _ := strconv.Atoi(docid.Member.(string))
+		if docidint == 0 {
+			continue
+		}
 		docrlt = append(docrlt, SearchOneRltToDoc(docidint))
 	}
 	return docrlt
