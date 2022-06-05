@@ -18,6 +18,7 @@ var redisdb *redis.Client
 var c_indextodoc *mgo.Collection //docid与doc的对应关系集合
 var c_keytoindx *mgo.Collection  //关键词与docid的对应关系集合
 var err error
+var latestDocid int
 
 func InitDB() error {
 	err = InitMysql()
@@ -57,6 +58,13 @@ func InitMongodb() error {
 	mgodb := session.DB("search_project")
 	c_indextodoc = mgodb.C("indextosource")
 	c_keytoindx = mgodb.C("keytoindex")
+	var lastestdoc Doc
+	err = c_indextodoc.Find(nil).Sort("ID").One(&lastestdoc)
+	if err != nil {
+		return err
+	}
+	latestDocid = lastestdoc.ID
+	fmt.Println("latestDocid", latestDocid)
 	return nil
 }
 
