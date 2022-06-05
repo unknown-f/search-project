@@ -171,7 +171,7 @@ func CutWords(doctext string, jbfc *gojieba.Jieba) []string {
 	return words
 }
 func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
-	startTime := time.Now()
+	//startTime := time.Now()
 	fileName := "./data/wukong50k_release.csv"
 	// fileName := "./data/test.csv"
 	fs, err := os.Open(fileName)
@@ -186,9 +186,9 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 	for {
 		row, errread := r.Read()
 		fmt.Println("row", row)
-		if errread == errread {
-			fmt.Println(time.Now().Sub(startTime))
-		}
+		//if errread == errread {
+		//	fmt.Println(time.Now().Sub(startTime))
+		//}
 		if len(row) == 0 {
 			return nil
 		}
@@ -198,7 +198,7 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 			continue
 		}
 		newdoc := Doc{
-			ID:     doc_id,
+			ID:     latestDocid,
 			ImgUrl: row[0],
 			Text:   row[1],
 		}
@@ -210,9 +210,23 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 		words := CutWords(row[1], jbfc)
 		//" "要不要处理一下
 		for _, value := range words {
-			c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": doc_id}})
+			c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
 		}
-		doc_id += 1
+		latestDocid += 1
 	}
 
+}
+
+func CutAndWriteOnce(jbfc *gojieba.Jieba, doctext string) {
+	newdoc := Doc{
+		ID:     latestDocid,
+		ImgUrl: "",
+		Text:   doctext,
+	}
+	c_indextodoc.Insert(newdoc)
+	words := CutWords(doctext, jbfc)
+	for _, value := range words {
+		c_keytoindx.Upsert(bson.M{"Nam": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
+	}
+	latestDocid += 1
 }
