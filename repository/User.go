@@ -34,7 +34,7 @@ func CreateUser(data *User) int {
 	// 密码加密
 	data.Password = ScryptPw(data.Password)
 	// 写入数据库
-	err = db.Create(&data).Error
+	err := db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -44,7 +44,7 @@ func CreateUser(data *User) int {
 // 查询用户列表
 func GetUsers() []User {
 	var users []User
-	err = db.Find(&users).Error
+	err := db.Find(&users).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil
@@ -55,7 +55,7 @@ func GetUsers() []User {
 // 编辑用户
 func EditUser(id int, data *User) int {
 	var user User
-	err = db.Model(&user).Where("id = ?", id).Update("username", data.Username).Error
+	err := db.Model(&user).Where("id = ?", id).Update("username", data.Username).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -70,7 +70,7 @@ func EditUser(id int, data *User) int {
 // 删除用户
 func DeleteUser(Username string) int {
 	var user User
-	err = db.Where("Username = ?", Username).Delete(&user).Error
+	err := db.Where("Username = ?", Username).Delete(&user).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

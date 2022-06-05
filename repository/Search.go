@@ -217,16 +217,23 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 
 }
 
-func CutAndWriteOnce(jbfc *gojieba.Jieba, doctext string) {
+func CutAndWriteOnce(doctext string) error {
 	newdoc := Doc{
 		ID:     latestDocid,
 		ImgUrl: "",
 		Text:   doctext,
 	}
-	c_indextodoc.Insert(newdoc)
-	words := CutWords(doctext, jbfc)
+	err := c_indextodoc.Insert(newdoc)
+	if err != nil {
+		return err
+	}
+	words := CutWords(doctext, Jbfc)
 	for _, value := range words {
-		c_keytoindx.Upsert(bson.M{"Nam": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
+		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
+		if err != nil {
+			return err
+		}
 	}
 	latestDocid += 1
+	return nil
 }

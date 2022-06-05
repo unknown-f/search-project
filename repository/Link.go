@@ -27,7 +27,7 @@ func CheckLink(title string, username string) int {
 
 // 创建链接
 func CreateLink(data *Link) int {
-	err = db.Create(&data).Error
+	err := db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -59,7 +59,7 @@ func GetLinkInfo(id int, username string) Link {
 // 获取链接列表
 func GetLinks(username string) []Link {
 	var links []Link
-	err = db.Where("username = ?", username).Find(&links).Error
+	err := db.Where("username = ?", username).Find(&links).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil
 	}
@@ -70,7 +70,7 @@ func GetLinks(username string) []Link {
 func EditLink(id int, username string, data *Link) int {
 	var link Link
 
-	err = db.Model(&link).Where("id = ? and username = ?", id, username).Update("title", data.Title).Update("favoritename",
+	err := db.Model(&link).Where("id = ? and username = ?", id, username).Update("title", data.Title).Update("favoritename",
 		data.Favoritename).Update("content", data.Content).Error
 	if err != nil {
 		return errmsg.ERROR
@@ -82,7 +82,7 @@ func EditLink(id int, username string, data *Link) int {
 // 删除链接
 func DeleteLink(title string, username string) int {
 	var link Link
-	err = db.Where("username = ? and title = ?", username, title).Delete(&link).Error
+	err := db.Where("username = ? and title = ?", username, title).Delete(&link).Error
 	if err != nil {
 		return errmsg.ERROR
 	}

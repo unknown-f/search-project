@@ -30,6 +30,17 @@ func SearchTopNDoc(c *gin.Context) {
 	}
 }
 
+func AddNewTextDoc(c *gin.Context) {
+	newtest := make(map[string]interface{})
+	c.BindJSON(&newtest)
+	err := repository.CutAndWriteOnce(newtest["test"].(string))
+	if err != nil {
+		c.JSON(500, err.Error())
+	} else {
+		c.JSON(200, "Ok")
+	}
+}
+
 func SearchTopNKeyword(c *gin.Context) {
 	num, err := strconv.ParseInt(c.Param("num"), 10, 64)
 	if err != nil {

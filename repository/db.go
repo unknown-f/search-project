@@ -17,11 +17,10 @@ var db *gorm.DB
 var redisdb *redis.Client
 var c_indextodoc *mgo.Collection //docid与doc的对应关系集合
 var c_keytoindx *mgo.Collection  //关键词与docid的对应关系集合
-var err error
 var latestDocid int
 
 func InitDB() error {
-	err = InitMysql()
+	err := InitMysql()
 	if err != nil {
 		return err
 	}
@@ -42,7 +41,7 @@ func InitRedis() error {
 		Password: "",
 		DB:       0, // redis一共16个库，指定其中一个库即可
 	})
-	_, err = redisdb.Ping().Result()
+	_, err := redisdb.Ping().Result()
 	if err != nil {
 		return err
 	}
@@ -70,6 +69,7 @@ func InitMongodb() error {
 
 func InitMysql() error {
 	var DB *sql.DB
+	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		utils.DbUser,
 		utils.DbPassword,
