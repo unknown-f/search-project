@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"searchproject/repository"
 	"searchproject/utils/errmsg"
@@ -22,7 +21,6 @@ func AddLink(c *gin.Context) {
 	data.Username = username
 	// 判断文章标题是否存在
 	code := repository.CheckLink(data.Favoriteid, data.Title)
-	fmt.Println("?????", data)
 	if code == errmsg.SUCCESS {
 		repository.CreateLink(&data)
 	}

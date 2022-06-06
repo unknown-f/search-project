@@ -58,6 +58,7 @@
                     alert("ERROR_TOKEN_EXIST");
                     break;
                 case 1005:
+                    login("退出");
                     alert("ERROR_TOKEN_RUNTIME");
                     break;
                 case 1006:
@@ -451,8 +452,7 @@
                 }
             }
         }
-        function login(){
-            let method = document.getElementById("loginBtn").value;
+        function login(method){
             if(method == "退出"){
                 user = "";
                 collection = "";
@@ -774,7 +774,7 @@
                 <div class="login-item"><input type="password" id="inputPWD" placeholder="输入密码"  size="11"/></div>
 
                 <div class="login-item"><input type="submit" id="cancelBtn" value="取消" size="2" onclick="cancelLogin()"/></div>
-                <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login()"/></div>
+                <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login(this.value)"/></div>
             </div>
         </div>
 		<img src="./logo.png" width="200" height="50" />

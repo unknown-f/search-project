@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"searchproject/utils"
 	"searchproject/utils/errmsg"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
 var JwtKey = []byte(utils.JwtKey)
@@ -77,7 +78,7 @@ func JwtToken() gin.HandlerFunc {
 		if tokenHeader == "" {
 			code = errmsg.ERROR_TOKEN_EXIST
 			c.JSON(http.StatusOK, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
@@ -88,7 +89,7 @@ func JwtToken() gin.HandlerFunc {
 		if len(checkToken) == 0 {
 			code = errmsg.ERROR_TOKEN_WRONG
 			c.JSON(http.StatusOK, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
@@ -98,7 +99,7 @@ func JwtToken() gin.HandlerFunc {
 		if len(checkToken) != 2 && checkToken[2] != "Bearer" {
 			code = errmsg.ERROR_TOKEN_WRONG
 			c.JSON(http.StatusOK, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
@@ -109,7 +110,7 @@ func JwtToken() gin.HandlerFunc {
 		if tCode != errmsg.SUCCESS {
 			code = tCode
 			c.JSON(http.StatusOK, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
