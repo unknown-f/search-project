@@ -146,7 +146,6 @@
             }
             document.getElementById("relation").innerHTML = '<div style="background-color: rgb(82, 142, 241);"><b style="color: black ">大家还在搜</b><div>';
             for(let i=0; i<Math.min(relativeRes.length,5); i++){
-                console.log(relativeRes[i]);
                 document.getElementById("relation").innerHTML += '<div class="rr" style="height:30px;" onclick=clickRelative(this.innerText)>'+relativeRes[i]+'</div>';
             }
         }
@@ -571,6 +570,38 @@
             document.getElementById("input").value = relationText;
             searching();
         }
+        function searchOrUpload(inputText){
+            if(inputText.length>1 && inputText.substr(inputText.length-1,1)=='&' && inputText.substr(inputText.length-2,1)!='&'){
+                document.getElementById("inputBtn").value = "上传";
+                document.getElementById("inputBtn").onclick = upload;
+            }
+            else{
+                document.getElementById("inputBtn").value = "搜索";
+                document.getElementById("inputBtn").onclick = searching;
+            }
+        }
+        function upload(){
+            let text = document.getElementById("input").value;
+            text = text.substr(0,text.length - 1);
+            var xhr = new XMLHttpRequest();
+
+            // 每次需要发请求需要做两步：
+            xhr.open("post", "search/doc", true);
+            xhr.timeout = 2000;
+            xhr.send('{"text":"'+text+'"}');
+            xhr.onreadystatechange=state_Change;
+
+            function state_Change(){
+                if (this.readyState==4){// 4 = "loaded"
+                    if (this.status==200){// 200 = "OK"
+                        alert("上传成功");
+                    }
+                    else{
+                        alert("上传失败");
+                    }
+                }
+            }
+        }
         function searching(){
             time = "time";
             text = document.getElementById("input").value;
@@ -780,7 +811,7 @@
 		<img src="./logo.png" width="200" height="50" />
         <br>
 
-		<input id="input" type="text" name="target" size="40">
+		<input id="input" type="text" name="target" size="40" onkeyup="searchOrUpload(this.value)">
 		<input id="inputBtn" type="submit" value="搜索" size="40" onclick="searching()">
 
 
