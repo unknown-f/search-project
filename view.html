@@ -144,7 +144,7 @@
                 document.getElementById("relation").innerHTML = "";
                 return;
             }
-            document.getElementById("relation").innerHTML = '<b style="color: black ">大家还在搜</b>';
+            document.getElementById("relation").innerHTML = '<div style="background-color: rgb(82, 142, 241);"><b style="color: black ">大家还在搜</b><div>';
             for(let i=0; i<Math.min(relativeRes.length,5); i++){
                 console.log(relativeRes[i]);
                 document.getElementById("relation").innerHTML += '<div class="rr" style="height:30px;" onclick=clickRelative(this.innerText)>'+relativeRes[i].Text+'</div>';
