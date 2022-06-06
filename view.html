@@ -5,12 +5,14 @@
         var currPage = 0;
         var pageSize = 5;
         var searchRes = new Array();
+        var relativeRes = null;
         var hotWord = "凌XSCANF";
         var hotList = new Array();
         var collectionList = new Map();
         var collectionIdMap = new Map();
         var collection = "";
 
+        //给字符串添加转义符
         function translateM(oriText,method){
             if(method == "html"){
                 let targetText = "";
@@ -137,7 +139,15 @@
             }
         }
         function flushRelative(){
-
+            if(relativeRes == null){
+                document.getElementById("relation").innerHTML = "";
+                return;
+            }
+            document.getElementById("relation").innerHTML = '<b style="color: black ">大家还在搜</b>';
+            for(let i=0; i<Math.min(relativeRes.length,5); i++){
+                console.log(relativeRes[i]);
+                document.getElementById("relation").innerHTML += '<div class="rr" style="height:30px;" onclick=clickRelative(this.innerText)>'+relativeRes[i].Text+'</div>';
+            }
         }
         function flushHotList(){
             document.getElementById("hotContent").innerHTML = "";
@@ -557,6 +567,10 @@
                 console.log("???");
             }
         }
+        function clickRelative(relationText){
+            document.getElementById("input").value = relationText;
+            searching();
+        }
         function searching(){
             time = "time";
             text = document.getElementById("input").value;
@@ -577,19 +591,17 @@
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret)
 
-                        var i;
-                        var idx = obj.ReturnRes;
-                        if(idx == null){
+                        if(obj.ReturnRes == null){
                             alert("没有查到相关结果");
                             return;
                         }
-                        searchRes = new Array(idx.length)
-                        for (var i=0;i<idx.length;i++){
-                            searchRes[i] = idx[i];
-                        }
+
+                        searchRes = obj.ReturnRes;
+                        relativeRes = obj.ReturnRes;
+
                         //添加页码
                         document.getElementById("pagelist").innerHTML = '<li><a id="0" class= "active" onclick="changePage(this.id)" href="#">1</a></li>'
-                        for(var i=1;i<Math.ceil(idx.length/pageSize);i++){
+                        for(let i=1;i<Math.ceil(searchRes.length/pageSize);i++){
                             document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
                         }
                         currPage = 0;
@@ -711,6 +723,16 @@
                 width: 100px;
                 height: 80px;
             }
+
+            .rr{
+                background-color: white;
+            }
+
+            .rr:hover{
+                background-color: rgb(231, 220, 220);
+            }
+
+
             ul.pagination {
                 display: inline-block;
                 padding: 0;
