@@ -136,12 +136,12 @@ func SearchRelatedInfo(Mvkey string) []string {
 			rs := []rune(string(prefix))
 			kindex = len(rs)
 		}
-		if kindex+keylen+4 < rlen {
-			relatedinfo = append(relatedinfo, string(RText[kindex:kindex+4+keylen]))
+		if kindex+keylen+6 < rlen {
+			relatedinfo = append(relatedinfo, string(RText[kindex:kindex+6+keylen]))
 
 		} else {
-			if kindex > 4 {
-				relatedinfo = append(relatedinfo, string(RText[kindex-4:kindex+keylen]))
+			if kindex > 6 {
+				relatedinfo = append(relatedinfo, string(RText[kindex-6:kindex+keylen]))
 			}
 		}
 	}
