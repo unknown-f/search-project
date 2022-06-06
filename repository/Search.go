@@ -8,8 +8,10 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+
 	"github.com/yanyiwu/gojieba"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -36,9 +38,10 @@ type SearchRlt struct {
 }
 
 type SearchRespond struct {
-	SearchTime string `json:"SearchTime" bson:"SearchTime"`
-	SearchText string `json:"SearchText" bson:"SearchText"`
-	ReturnRes  []Doc  `json:"ReturnRes" bson:"ReturnRes"`
+	SearchTime  string   `json:"SearchTime" bson:"SearchTime"`
+	SearchText  string   `json:"SearchText" bson:"SearchText"`
+	ReturnRes   []Doc    `json:"ReturnRes" bson:"ReturnRes"`
+	RelatedInfo []string `json:"RelatedInfo" bson:"RelatedInfo"`
 }
 
 //***结构体排序方法Start***
@@ -119,55 +122,102 @@ func SearchRltToDoc(rlt []SearchRlt) []Doc {
 	return docrlt
 }
 
-//text待查询的文本，maxnumofrlt返回的文档ID的数量的上限
-func Search(text string, maxnumofrlt int) []SearchRlt {
+func SearchRelatedInfo(Mvkey string) []string {
+	keysearchrltp := SearchKeyword(Mvkey)
+	var relatedinfo []string
+	for _, docid := range keysearchrltp.DocList {
+		docinfo := SearchOneRltToDoc(docid)
+		RText := []rune(docinfo.Text)
+		rlen := len(RText)
+		keylen := len([]rune(Mvkey))
+		kindex := strings.Index(docinfo.Text, Mvkey)
+		if kindex > 0 {
+			prefix := []byte(docinfo.Text)[:kindex]
+			rs := []rune(string(prefix))
+			kindex = len(rs)
+		}
+		if kindex+keylen+4 < rlen {
+			relatedinfo = append(relatedinfo, string(RText[kindex:kindex+4+keylen]))
+
+		} else {
+			if kindex > 4 {
+				relatedinfo = append(relatedinfo, string(RText[kindex-4:kindex+keylen]))
+			}
+		}
+	}
+	return relatedinfo
+}
+
+func SearchKeyword(key string) Keyword {
 	var keysearchrltp Keyword
+	redisrlt, errread := redisdb.Get("keyword:" + key).Result()
+	if errread != nil {
+		var redisbyte []byte
+		fmt.Println("read", errread)
+		errread = c_keytoindx.Find(bson.M{"Name": key}).One(&keysearchrltp)
+		redisbyte, errread = json.Marshal(keysearchrltp)
+		if errread != nil {
+			fmt.Println(errread)
+		} else {
+			redisdb.Set("keyword:"+key, string(redisbyte), time.Hour*24).Result()
+		}
+	} else {
+		errread = json.Unmarshal([]byte(redisrlt), &keysearchrltp)
+		if errread != nil {
+			fmt.Println(errread)
+		}
+	}
+	return keysearchrltp
+}
+
+//text待查询的文本，maxnumofrlt返回的文档ID的数量的上限
+func Search(text string, maxnumofrlt int, mrelatedinfo int) ([]SearchRlt, []string) {
 	var srlt SearchRltC
-	keyword_ifidf := make(map[int]float32)
+	var rinfo []string
+	var mvkey string
+	keyword_tfidf := make(map[int]float32)
+	keyword_fre := make(map[string]float32)
+
 	words := CutWords(text, Jbfc)
 	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
-		redisrlt, errread := redisdb.Get("keyword:" + value).Result()
-		if errread != nil {
-			var redisbyte []byte
-			fmt.Println("read1", errread)
-			errread = c_keytoindx.Find(bson.M{"Name": value}).One(&keysearchrltp)
-			redisbyte, errread = json.Marshal(keysearchrltp)
-			if errread != nil {
-				fmt.Println(errread)
-			} else {
-				redisdb.Set("keyword:"+value, string(redisbyte), time.Hour*24).Result()
-			}
-		} else {
-			redisdb.ZIncrBy("hotkeyword", 1, value).Result()
-			errread = json.Unmarshal([]byte(redisrlt), &keysearchrltp)
-			if errread != nil {
-				fmt.Println(errread)
-			}
-			//redisdb.ZAdd("hotkeyword", redis.Z{Score: 1, Member: "keyword:" + value})
-		}
+		keysearchrltp := SearchKeyword(value)
+		redisdb.ZIncrBy("hotkeyword", 1, value).Result()
+		keyword_fre[value] += 1 / float32(len(keysearchrltp.DocList))
 		for _, docid := range keysearchrltp.DocList {
-			keyword_ifidf[docid] += 1 / float32(len(keysearchrltp.DocList))
+			keyword_tfidf[docid] += 1 / float32(len(keysearchrltp.DocList))
 		}
 	}
-	if len(keyword_ifidf) != 0 {
-		for key, grade := range keyword_ifidf {
+	if len(keyword_tfidf) != 0 {
+		mvkey = words[0]
+		for key, _ := range keyword_fre {
+			if keyword_fre[key] > keyword_fre[mvkey] {
+				mvkey = key
+			}
+		}
+		for key, grade := range keyword_tfidf {
 			srlt = append(srlt, SearchRlt{Grade: grade, DocID: key})
 		}
 		sort.Sort(srlt)
+		rinfo = SearchRelatedInfo(mvkey)
+		if len(rinfo) > mrelatedinfo {
+			rinfo = rinfo[0:mrelatedinfo]
+		}
 		if len(srlt) > maxnumofrlt {
 			srlt = srlt[0:maxnumofrlt]
 		}
 	} else {
 		srlt = []SearchRlt{}
 	}
+
 	fmt.Println(srlt)
-	return srlt
+	return srlt, rinfo
 }
 
 //返回文本的分词结果
 func CutWords(doctext string, jbfc *gojieba.Jieba) []string {
 	words := jbfc.CutForSearch(doctext, true)
+	//words := jbfc.Cut(doctext, true)
 	fmt.Println(words)
 	return words
 }
@@ -217,10 +267,10 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 	}
 
 }
-func CutAndWriteOnce(doctext string) error {	
+func CutAndWriteOnce(doctext string) error {
 	mgomutex.Lock()
 	newdoc := Doc{
-		ID:     latestDocid+1,
+		ID:     latestDocid + 1,
 		ImgUrl: "",
 		Text:   doctext,
 	}
@@ -230,7 +280,7 @@ func CutAndWriteOnce(doctext string) error {
 	}
 	words := CutWords(doctext, Jbfc)
 	for _, value := range words {
-		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid+1}})
+		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid + 1}})
 		if err != nil {
 			return err
 		}
