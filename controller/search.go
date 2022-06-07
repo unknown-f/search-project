@@ -11,7 +11,7 @@ import (
 func Search(c *gin.Context) {
 	var data repository.SearchRespond
 	c.BindJSON(&data)
-	doc, relatedinfo := repository.Search(data.SearchText, 20, 5)
+	doc, relatedinfo := repository.Search(data.SearchText, "抖音", 20, 5)
 	srlttest := repository.SearchRltToDoc(doc)
 	data.RelatedInfo = relatedinfo
 	data.ReturnRes = srlttest
