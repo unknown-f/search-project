@@ -12,6 +12,9 @@
         var collectionIdMap = new Map();
         var collection = "";
 
+        var lastSearchTime;
+        var lastSearchText;
+
         //给字符串添加转义符
         function translateM(oriText,method){
             if(method == "html"){
@@ -75,7 +78,9 @@
                     break;
             }
         }
-        function searchHot(){
+        function Init(){
+            lastSearchTime = Date();
+            lastSearchText = "";
             searchHotWord();
             searchHotDocx();
         }
@@ -603,7 +608,6 @@
             }
         }
         function searching(){
-            time = "time";
             text = document.getElementById("input").value;
             if(text == ""){
                 text = hotWord;
@@ -611,9 +615,9 @@
             var xhr = new XMLHttpRequest();
 
             // 每次需要发请求需要做两步：
-            xhr.open("get", "search/"+time+"/"+text, true);
+            xhr.open("post", "search/text", true);
             xhr.timeout = 2000;
-            xhr.send(null)
+            xhr.send('{"SearchText":"'+text+'","SearchTime":"'+Date()+'"}');
             xhr.onreadystatechange=state_Change;
 
             function state_Change(){
@@ -621,12 +625,16 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret)
-
+                        if(obj.SearchTime <= lastSearchTime || obj.SearchText == lastSearchText){
+                            return;
+                        }
                         if(obj.ReturnRes == null){
                             alert("没有查到相关结果");
                             return;
                         }
 
+                        lastSearchText = obj.SearchText;
+                        lastSearchTime = lastSearchTime;
                         searchRes = obj.ReturnRes;
                         relativeRes = obj.RelatedInfo;
 
@@ -793,7 +801,7 @@
         </style>
 	</head>
 
-	<body onload="searchHot()">
+	<body onload="Init()">
         <div id="rightup">
             <div id="usrName"><a >未登录</a><br></div>
             <div id="api">
