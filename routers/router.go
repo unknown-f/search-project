@@ -59,7 +59,7 @@ func InitRouter() error {
 		//search 搜索路由
 		searchRouter.GET("/hotdoc/:num", controller.SearchTopNDoc)
 		searchRouter.GET("/hotkeyword/:num", controller.SearchTopNKeyword)
-		searchRouter.GET("/:time/:text", controller.Search)
+		searchRouter.POST("/text", controller.Search)
 		searchRouter.POST("/doc", controller.AddNewTextDoc)
 	}
 

@@ -9,16 +9,12 @@ import (
 )
 
 func Search(c *gin.Context) {
-	time := c.Param("time")
-	text := c.Param("text")
-	doc, relatedinfo := repository.Search(text, "抖音", 20, 5)
+	var data repository.SearchRespond
+	c.BindJSON(&data)
+	doc, relatedinfo := repository.Search(data.SearchText, "抖音", 20, 5)
 	srlttest := repository.SearchRltToDoc(doc)
-	data := repository.SearchRespond{
-		SearchTime:  time,
-		SearchText:  text,
-		ReturnRes:   srlttest,
-		RelatedInfo: relatedinfo,
-	}
+	data.RelatedInfo = relatedinfo
+	data.ReturnRes = srlttest
 	fmt.Println("return:", data)
 	c.JSON(200, data)
 }
