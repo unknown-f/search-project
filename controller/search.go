@@ -11,7 +11,7 @@ import (
 func Search(c *gin.Context) {
 	time := c.Param("time")
 	text := c.Param("text")
-	doc, relatedinfo := repository.Search(text, 20, 5)
+	doc, relatedinfo := repository.Search(text, "抖音", 20, 5)
 	srlttest := repository.SearchRltToDoc(doc)
 	data := repository.SearchRespond{
 		SearchTime:  time,
