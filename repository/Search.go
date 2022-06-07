@@ -171,31 +171,38 @@ func SearchKeyword(key string) Keyword {
 }
 
 //text待查询的文本，maxnumofrlt返回的文档ID的数量的上限
-func Search(text string, filtration string, maxnumofrlt int, mrelatedinfo int) ([]SearchRlt, []string) {
+func Search(text string, filtration []string, maxnumofrlt int, mrelatedinfo int) ([]SearchRlt, []string) {
 	var srlt SearchRltC
 	var rinfo []string
 	var mvkey string
 	keyword_tfidf := make(map[int]float32)
 	keyword_fre := make(map[string]float32)
-	keyword_filter := make(map[string]struct{})
-	wordsfilter := CutWords(filtration, Jbfc)
-	for _, fv := range wordsfilter {
-		keyword_filter[fv] = struct{}{}
+	keyword_filter := make(map[int]struct{})
+	for _, ff := range filtration {
+		wordsfilter := CutWords(ff, Jbfc)
+		for _, fv := range wordsfilter {
+			keysearchfilter := SearchKeyword(fv)
+			for _, docid := range keysearchfilter.DocList {
+				keyword_filter[docid] = struct{}{}
+			}
+		}
 	}
+	//fmt.Println("f", keyword_filte)
 	words := CutWords(text, Jbfc)
 	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
-		_, ok := keyword_filter[value]
-		if ok == true {
-			continue
-		}
 		keysearchrltp := SearchKeyword(value)
 		redisdb.ZIncrBy("hotkeyword", 1, value).Result()
 		keyword_fre[value] += 1 / float32(len(keysearchrltp.DocList))
 		for _, docid := range keysearchrltp.DocList {
+			_, ok := keyword_filter[docid]
+			if ok == true {
+				continue
+			}
 			keyword_tfidf[docid] += 1 / float32(len(keysearchrltp.DocList))
 		}
 	}
+	//fmt.Println("f", keyword_tfid)
 	if len(keyword_tfidf) != 0 {
 		mvkey = words[0]
 		for key, _ := range keyword_fre {

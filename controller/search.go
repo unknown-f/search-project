@@ -4,14 +4,23 @@ import (
 	"fmt"
 	"searchproject/repository"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Search(c *gin.Context) {
+	var doc []repository.SearchRlt
+	var relatedinfo []string
 	var data repository.SearchRespond
 	c.BindJSON(&data)
-	doc, relatedinfo := repository.Search(data.SearchText, "抖音", 20, 5)
+	searchinfo := strings.Split(data.SearchText, " -")
+	fmt.Println("SSS", searchinfo)
+	if len(searchinfo) > 1 {
+		doc, relatedinfo = repository.Search(searchinfo[0], searchinfo[1:], 20, 5)
+	} else {
+		doc, relatedinfo = repository.Search(searchinfo[0], []string{}, 20, 5)
+	}
 	srlttest := repository.SearchRltToDoc(doc)
 	data.RelatedInfo = relatedinfo
 	data.ReturnRes = srlttest
