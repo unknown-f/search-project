@@ -60,7 +60,9 @@ func InitMongodb() error {
 	var lastestdoc Doc
 	err = c_indextodoc.Find(nil).Sort("-ID").One(&lastestdoc)
 	if err != nil {
-		return err
+		latestDocid = 0
+	} else {
+		latestDocid = lastestdoc.ID
 	}
 	latestDocid = lastestdoc.ID
 	fmt.Println("latestDocid", latestDocid)
@@ -85,7 +87,6 @@ func InitMysql() error {
 	if err != nil {
 		return err
 	}
-
 	err = db.AutoMigrate(&User{}, &Favorite{}, &Link{})
 	if err != nil {
 		return err
