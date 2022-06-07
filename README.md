@@ -13,9 +13,11 @@
 ```
 用户请求：
 get("/")-请求页面
-get("/hot")-请求热榜
-get("/search/text/:time/:text")-搜索text
-get("/search/picture/:time/:picture")-搜图
-get("/register/:time/:userName/:passWord")-注册用户名和密码
-get("/login/:time/:userName/:passWord")-登录用户名密码，需要返回收藏夹
-get("/drop/:time/:userName")-用户注销
+
+get("/hot")-请求热词热榜
+
+post("/search/text")-搜索text
+
+收藏夹更名：在添加右侧文本框输入新名字点更名
+
+收藏夹添加链接：进入收藏夹，在添加右侧文本框输入数字1-5，点击添加，则可添加左侧链接
