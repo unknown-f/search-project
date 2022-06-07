@@ -86,7 +86,7 @@
         }
         function searchHotWord(){
             var xhr = new XMLHttpRequest();
-            xhr.open("get", "/search/hotkeyword/0");
+            xhr.open("get", "/search/hotkeyword/3");
             xhr.timeout = 2000;
             xhr.send(null);
             xhr.onreadystatechange=state_Change;
@@ -96,9 +96,14 @@
                     if (this.status==200){// 200 = "OK"
                         let ret = xhr.responseText;
                         let obj = JSON.parse(ret);
-                        if(obj != null)
-                            hotWord = obj[0];
-                    
+                        if(obj == null){
+                            return;
+                        }
+                        hotWord = obj[0];
+                        document.getElementById("otherHotWord").innerHTML = "";
+                        for(let i=1; i<obj.length;i++){
+                            document.getElementById("otherHotWord").innerHTML += '<div class="rr" style="height:24px;width:100;float:left" onclick=clickRelative(this.innerText)>'+obj[i]+'</div>';
+                        }
                     }
                 }
                 document.getElementById("input").placeholder = hotWord;
@@ -576,6 +581,12 @@
             searching();
         }
         function searchOrUpload(inputText){
+            if(inputText==""){
+                document.getElementById("hotWordBox").style.display="block";
+            }
+            else{
+                document.getElementById("hotWordBox").style.display="none";
+            }
             if(inputText.length>1 && inputText.substr(inputText.length-1,1)=='&' && inputText.substr(inputText.length-2,1)!='&'){
                 document.getElementById("inputBtn").value = "上传";
                 document.getElementById("inputBtn").onclick = upload;
@@ -644,6 +655,7 @@
                             document.getElementById("pagelist").innerHTML += '<li><a id="'+ i +'" onclick="changePage(this.id)" href="#">'+(i+1)+'</a></li>'
                         }
                         currPage = 0;
+                        document.getElementById("hotWordBox").style.display = "none";
                         flushSearch();
                         flushRelative();
                     }
@@ -659,6 +671,11 @@
 		<meta http-equiv="Access-Control-Allow-Origin" content="*" charset="utf-8">
 		<title>搜索引擎</title>
         <style>
+            #midup{
+                position: absolute;
+                top:60px;
+                left:410px;
+            }
             #rightup{
                 width: 150px;
                 height: 200px;
@@ -816,17 +833,23 @@
                 <div class="login-item"><input type="submit" id="loginBtn" value="注册" size="2" onclick="login(this.value)"/></div>
             </div>
         </div>
-		<img src="./logo.png" width="200" height="50" />
-        <br>
+        <div id="leftup" style="width:400px;height: 100px;">
+            <img src="./logo.png" width="200" height="50" />
+            <br>
 
-		<input id="input" type="text" name="target" size="40" onkeyup="searchOrUpload(this.value)">
-		<input id="inputBtn" type="submit" value="搜索" size="40" onclick="searching()">
-
-
-		<form id="selectMethod">
-			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="default" checked>文本搜索
-			<input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
-		</form>
+            <input id="input" type="text" name="target" size="40" onkeyup="searchOrUpload(this.value)">
+            <input id="inputBtn" type="submit" value="搜索" size="40" onclick="searching()">
+            <div id="hotWordBox">
+                <div style="width: 90px;float: left;">其它热词：</div>
+                <div id="otherHotWord" style="float: left;"></div>
+            </div>
+        </div>
+        <div id="midup" style="display: block;">
+            <form id="selectMethod">
+                <input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="default" checked>文本搜索
+                <input type="radio" name="searchMethod" onclick="updateMethod(this.value)" value="set">以图搜图
+            </form>
+        </div>
         <hr>
         <div id="right">
             <div id="tophot"><b style="color: rgb(236, 118, 6)">访问热榜</b><hr style="background-color: rgb(236, 118, 6);height: 1px; border: none;">
