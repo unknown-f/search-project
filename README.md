@@ -4,7 +4,7 @@ XSCAN是基于Go语言开发的搜索引擎，完成了基础部分的全部要�
 
 ## 系统架构
 
-![image](![e0ca712b61c2dd0e1d5331bd8e035ca](https://github.com/unknown-f/img/blob/239e3a962c176aa1e536dec8d33f881c70dcd24d/arch.png))
+![image](https://github.com/unknown-f/img/blob/239e3a962c176aa1e536dec8d33f881c70dcd24d/arch.png)
 ## 部署步骤
 
 - 安装mongodb到本地，建立search_project数据库，并在该数据库下建立indextosource集合和keytoindex集合
