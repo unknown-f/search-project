@@ -1,7 +1,11 @@
 # XSCAN
 ## 简介
 XSCAN是基于Go语言开发的搜索引擎，完成了基础部分的全部要求包括文本搜索，相关搜索，文本信息上传，获取热点文档和热点关键词和进阶部分关于用户注册登录以及收藏夹管理的要求。XSCAN使用了go gin，gorm框架和Mysql，Mongodb，Redis数据库。通过Mysql管理用户数据和收藏夹，通过Mongodb存储源文本和索引，通过Redis对热点搜索数据和热榜进行缓存和管理。用户鉴权通过JWT完成。目前读取了大概200K图文对数据。
-## Build Setup
+
+## 系统架构
+
+![image](![e0ca712b61c2dd0e1d5331bd8e035ca](https://user-images.githubusercontent.com/46098775/170276592-2d66ff54-4200-4b4f-866d-6436780cbb10.png))
+## 部署步骤
 
 - 安装mongodb到本地，建立search_project数据库，并在该数据库下建立indextosource集合和keytoindex集合
 - 安装redis；安装mysql，并修改config.ini中的相关配置
