@@ -87,7 +87,8 @@ func InitMysql() error {
 	if err != nil {
 		return err
 	}
-	err = db.AutoMigrate(&User{}, &Favorite{}, &Link{})
+	err = db.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4").AutoMigrate(&User{}, &Favorite{}, &Link{})
+
 	if err != nil {
 		return err
 	}

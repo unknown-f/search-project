@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
+
 	"time"
 
 	"github.com/yanyiwu/gojieba"
@@ -17,7 +17,6 @@ import (
 )
 
 var Jbfc *gojieba.Jieba
-var mgomutex sync.Mutex
 
 type Doc struct {
 	ID     int    `json:"ID" bson:"ID"`
@@ -154,6 +153,7 @@ func SearchKeyword(key string) Keyword {
 	if errread != nil {
 		var redisbyte []byte
 		fmt.Println("read", errread)
+		fmt.Println("readkeyword", errread)
 		errread = c_keytoindx.Find(bson.M{"Name": key}).One(&keysearchrltp)
 		redisbyte, errread = json.Marshal(keysearchrltp)
 		if errread != nil {
@@ -275,32 +275,41 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 		c_indextodoc.Insert(newdoc)
 		words := CutWords(row[1], jbfc)
 		//" "要不要处理一下
+		latestDocid += 1
 		for _, value := range words {
 			c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
 		}
-		latestDocid += 1
+		
 	}
 
 }
 func CutAndWriteOnce(doctext string) error {
-	mgomutex.Lock()
+	var redisbyte []byte
 	newdoc := Doc{
 		ID:     latestDocid + 1,
 		ImgUrl: "",
 		Text:   doctext,
 	}
+	fmt.Println(newdoc)
 	err := c_indextodoc.Insert(newdoc)
 	if err != nil {
 		return err
-	}
+	}		
+	redisbyte, err = json.Marshal(newdoc)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		redisdb.Set("doc:"+strconv.Itoa(latestDocid + 1), string(redisbyte), time.Hour*24)
+	}	
 	words := CutWords(doctext, Jbfc)
 	for _, value := range words {
+		fmt.Println(value,latestDocid + 1)
 		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid + 1}})
+		redisdb.Del("keyword:" + value)		
 		if err != nil {
 			return err
 		}
 	}
-	latestDocid += 1
-	mgomutex.Unlock()
+	latestDocid += 1	
 	return nil
 }

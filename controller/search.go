@@ -5,9 +5,12 @@ import (
 	"searchproject/repository"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
+
+var mgomutex sync.Mutex
 
 func Search(c *gin.Context) {
 	var doc []repository.SearchRlt
@@ -40,7 +43,10 @@ func SearchTopNDoc(c *gin.Context) {
 func AddNewTextDoc(c *gin.Context) {
 	newtest := make(map[string]interface{})
 	c.BindJSON(&newtest)
+	mgomutex.Lock()
 	err := repository.CutAndWriteOnce(newtest["text"].(string))
+	fmt.Println(newtest["text"].(string))
+	mgomutex.Unlock()
 	if err != nil {
 		c.JSON(500, err.Error())
 	} else {
