@@ -14,6 +14,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//repository.ReadCutAndWrite(repository.Jbfc)
 	// 用户登录、注册、收藏夹等部分的路由
 	routers.InitRouter()
 	if err != nil {

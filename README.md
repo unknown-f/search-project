@@ -1,16 +1,14 @@
 # XSCAN
-XSCAN是基于Go语言开发的搜索引擎，完成了基础部分的全部要求和进阶部分关于用户注册登录以及收藏夹管理的要求。XSCAN使用了go gin，gorm框架和Mysql，Mongodb，Redis数据库。通过Mysql管理用户数据和收藏夹，通过Mongodb存储源文本和索引，通过Redis对热点搜索数据和热榜进行缓存和管理。用户鉴权通过JWT完成。
+## 简介
+XSCAN是基于Go语言开发的搜索引擎，完成了基础部分的全部要求包括文本搜索，相关搜索，文本信息上传，获取热点文档和热点关键词和进阶部分关于用户注册登录以及收藏夹管理的要求。XSCAN使用了go gin，gorm框架和Mysql，Mongodb，Redis数据库。通过Mysql管理用户数据和收藏夹，通过Mongodb存储源文本和索引，通过Redis对热点搜索数据和热榜进行缓存和管理。用户鉴权通过JWT完成。目前读取了大概200K图文对数据。
 ## Build Setup
 
-``` bash
-安装mongodb到本地，建立search_project数据库，并在该数据库下建立indextosource集合和keytoindex集合
+- 安装mongodb到本地，建立search_project数据库，并在该数据库下建立indextosource集合和keytoindex集合
+- 安装redis；安装mysql，并修改config.ini中的相关配置
+- 安装gcc，目的是为了正常运行jieba分词库
+- 第一次启动时去掉ReadCutAndWrite的注释，用于建立检索数据库，wukong50k_release.csv这个数据集大概需要2个小时建立数据库
 
-安装gcc，目的是为了正常运行jieba分词库
-
-第一次启动时去掉ReadCutAndWrite的注释，用于建立检索数据库，wukong50k_release.csv这个数据集大概需要2个小时建立数据库
-```
-
-# 功能介绍
+## 功能介绍
 详细接口文档见： https://www.apifox.cn/apidoc/shared-423b7faa-ac68-4343-bd49-6cb069c6cb21 访问密码 : 2222 
 - 搜索
   - 获取热点文档：从redis中获取被检索次数较多的热点文档
