@@ -63,7 +63,7 @@ func (s SearchRltC) Swap(i, j int) {
 func InitJieba() {
 	Jbfc = gojieba.NewJieba()
 }
-
+//从redis中获取热度最高的文档
 func SearchTopNDoc(NDoc int64) []Doc {
 	var docrlt []Doc
 	hotdoc, _ := redisdb.ZRevRangeWithScores("hotdoc", 0, NDoc).Result()
@@ -77,7 +77,7 @@ func SearchTopNDoc(NDoc int64) []Doc {
 	}
 	return docrlt
 }
-
+//从redis中获取热度最高的关键词
 func SearchTopNKeyword(NWord int64) []string {
 	var hotkeywords []string
 	hotkeyword, _ := redisdb.ZRevRangeWithScores("hotkeyword", 0, NWord).Result()
@@ -88,8 +88,7 @@ func SearchTopNKeyword(NWord int64) []string {
 	return hotkeywords
 }
 
-//根据检索到的文档ID，查询得到文档
-
+//根据文档ID，查询得到文档
 func SearchOneRltToDoc(docid int) Doc {
 	var docrltp Doc
 	redisrlt, errs := redisdb.Get("doc:" + strconv.Itoa(docid)).Result()
@@ -113,6 +112,7 @@ func SearchOneRltToDoc(docid int) Doc {
 	return docrltp
 }
 
+//根据文档ID，组合搜索结果
 func SearchRltToDoc(rlt []SearchRlt) []Doc {
 	var docrlt []Doc
 	for _, rltp := range rlt {
@@ -120,7 +120,7 @@ func SearchRltToDoc(rlt []SearchRlt) []Doc {
 	}
 	return docrlt
 }
-
+//根据文档中最重要的关键词，进行相关搜索的推荐
 func SearchRelatedInfo(Mvkey string) []string {
 	keysearchrltp := SearchKeyword(Mvkey)
 	var relatedinfo []string
@@ -146,7 +146,7 @@ func SearchRelatedInfo(Mvkey string) []string {
 	}
 	return relatedinfo
 }
-
+//根据关键词查询相应的文档序号，如果缓存中不存在就写入缓存
 func SearchKeyword(key string) Keyword {
 	var keysearchrltp Keyword
 	redisrlt, errread := redisdb.Get("keyword:" + key).Result()
@@ -170,29 +170,27 @@ func SearchKeyword(key string) Keyword {
 	return keysearchrltp
 }
 
-//text待查询的文本，maxnumofrlt返回的文档ID的数量的上限
+//text待查询的文本，filtration被过滤的关键词，maxnumofrlt返回的文档ID的数量的上限，mrelatedinfo返回的相关搜索信息的数量的上线
 func Search(text string, filtration []string, maxnumofrlt int, mrelatedinfo int) ([]SearchRlt, []string) {
 	var srlt SearchRltC
 	var rinfo []string
 	var mvkey string
-	keyword_tfidf := make(map[int]float32)
-	keyword_fre := make(map[string]float32)
-	keyword_filter := make(map[int]struct{})
+	keyword_tfidf := make(map[int]float32)//存储所有可能相关的文档的tf-idf
+	keyword_fre := make(map[string]float32)//存储每个关键词出现的频数
+	keyword_filter := make(map[int]struct{})//记录要过滤的关键词
 	for _, ff := range filtration {
 		wordsfilter := CutWords(ff, Jbfc)
 		for _, fv := range wordsfilter {
 			keysearchfilter := SearchKeyword(fv)
 			for _, docid := range keysearchfilter.DocList {
-				keyword_filter[docid] = struct{}{}
+				keyword_filter[docid] = struct{}{}//通过hashmap记录过滤词
 			}
 		}
 	}
-	//fmt.Println("f", keyword_filte)
 	words := CutWords(text, Jbfc)
-	//查询每个关键词对应的DocList，并聚合到一起
 	for _, value := range words {
 		keysearchrltp := SearchKeyword(value)
-		redisdb.ZIncrBy("hotkeyword", 1, value).Result()
+		redisdb.ZIncrBy("hotkeyword", 1, value).Result()//关键词每被搜索一次即在redis中更新关键词的热度
 		keyword_fre[value] += 1 / float32(len(keysearchrltp.DocList))
 		for _, docid := range keysearchrltp.DocList {
 			_, ok := keyword_filter[docid]
@@ -202,7 +200,6 @@ func Search(text string, filtration []string, maxnumofrlt int, mrelatedinfo int)
 			keyword_tfidf[docid] += 1 / float32(len(keysearchrltp.DocList))
 		}
 	}
-	//fmt.Println("f", keyword_tfid)
 	if len(keyword_tfidf) != 0 {
 		mvkey = words[0]
 		for key, _ := range keyword_fre {
@@ -232,29 +229,24 @@ func Search(text string, filtration []string, maxnumofrlt int, mrelatedinfo int)
 //返回文本的分词结果
 func CutWords(doctext string, jbfc *gojieba.Jieba) []string {
 	words := jbfc.CutForSearch(doctext, true)
-	//words := jbfc.Cut(doctext, true)
+	//words := jbfc.Cut(doctext, true) 精准分词模式
 	fmt.Println(words)
 	return words
 }
+//读悟空图文对数据集->分词->建立倒排索引
 func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
-	//startTime := time.Now()
 	fileName := "./data/wukong50k_release.csv"
-	// fileName := "./data/test.csv"
 	fs, err := os.Open(fileName)
 	if err != nil {
 		return err
 	}
 	defer fs.Close()
-
 	r := csv.NewReader(fs)
 	//针对大文件，一行一行的读取文件
 	doc_id := 0
 	for {
 		row, errread := r.Read()
 		fmt.Println("row", row)
-		//if errread == errread {
-		//	fmt.Println(time.Now().Sub(startTime))
-		//}
 		if len(row) == 0 {
 			return nil
 		}
@@ -276,13 +268,14 @@ func ReadCutAndWrite(jbfc *gojieba.Jieba) error {
 		words := CutWords(row[1], jbfc)
 		//" "要不要处理一下
 		latestDocid += 1
-		for _, value := range words {
+		for _, value := range words {//分词，建立倒排索引
 			c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid}})
 		}
-		
+
 	}
 
 }
+//分词并建立倒排索引，用于用户上传的新的文档
 func CutAndWriteOnce(doctext string) error {
 	var redisbyte []byte
 	newdoc := Doc{
@@ -294,22 +287,23 @@ func CutAndWriteOnce(doctext string) error {
 	err := c_indextodoc.Insert(newdoc)
 	if err != nil {
 		return err
-	}		
+	}
 	redisbyte, err = json.Marshal(newdoc)
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		redisdb.Set("doc:"+strconv.Itoa(latestDocid + 1), string(redisbyte), time.Hour*24)
-	}	
+		redisdb.Set("doc:"+strconv.Itoa(latestDocid+1), string(redisbyte), time.Hour*24)//用户上传新文档时直接存一份缓存
+	}
 	words := CutWords(doctext, Jbfc)
-	for _, value := range words {
-		fmt.Println(value,latestDocid + 1)
+	for _, value := range words {//分词，建立倒排索引
+		fmt.Println(value, latestDocid+1)
 		_, err = c_keytoindx.Upsert(bson.M{"Name": value}, bson.M{"$push": bson.M{"DocList": latestDocid + 1}})
-		redisdb.Del("keyword:" + value)		
+		//引入新文档导致部分关键词的倒排索引发生变化，采用先更新数据库再删除缓存的方法保证缓存与数据库的一致性
+		redisdb.Del("keyword:" + value)
 		if err != nil {
 			return err
 		}
 	}
-	latestDocid += 1	
+	latestDocid += 1
 	return nil
 }
