@@ -26,7 +26,6 @@ func Cors() gin.HandlerFunc {
 			//允许客户端传递校验信息比如 cookie (重要)
 			c.Header("Access-Control-Allow-Credentials", "true")
 		}
-
 		//允许类型校验
 		if method == "OPTIONS" {
 			c.JSON(http.StatusOK, "ok!")
